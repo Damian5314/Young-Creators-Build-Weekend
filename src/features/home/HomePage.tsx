@@ -175,28 +175,24 @@ export default function HomePage() {
         onValueChange={(value) => setActiveTab(value as 'restaurants' | 'recipes')}
         className="h-screen flex flex-col"
       >
-        {/* Fixed Tabs Header */}
-        <div
-          className="fixed top-0 left-0 right-0 z-30 backdrop-blur-xl border-b border-white/10 glass-header"
-        >
-          <div className="px-4 pt-3 pb-2 safe-top-with-padding">
-            <TabsList className="grid w-full grid-cols-2 h-11 bg-white/10 backdrop-blur-md border border-white/20">
-              <TabsTrigger
-                value="restaurants"
-                className="flex items-center gap-2 data-[state=active]:bg-white/20 data-[state=active]:text-white data-[state=active]:shadow-lg transition-all text-white/70"
-              >
-                <UtensilsCrossed className="h-4 w-4" />
-                Restaurants
-              </TabsTrigger>
-              <TabsTrigger
-                value="recipes"
-                className="flex items-center gap-2 data-[state=active]:bg-white/20 data-[state=active]:text-white data-[state=active]:shadow-lg transition-all text-white/70"
-              >
-                <ChefHat className="h-4 w-4" />
-                Recepten
-              </TabsTrigger>
-            </TabsList>
-          </div>
+        {/* Centered Category Tabs */}
+        <div className="fixed top-0 left-0 right-0 z-30 flex justify-center pt-4 safe-top-with-padding">
+          <TabsList className="h-11 bg-black/40 backdrop-blur-md border border-white/20 rounded-full px-1">
+            <TabsTrigger
+              value="restaurants"
+              className="flex items-center gap-2 rounded-full px-4 data-[state=active]:bg-white/20 data-[state=active]:text-white data-[state=active]:shadow-lg transition-all text-white/70"
+            >
+              <UtensilsCrossed className="h-4 w-4" />
+              Restaurants
+            </TabsTrigger>
+            <TabsTrigger
+              value="recipes"
+              className="flex items-center gap-2 rounded-full px-4 data-[state=active]:bg-white/20 data-[state=active]:text-white data-[state=active]:shadow-lg transition-all text-white/70"
+            >
+              <ChefHat className="h-4 w-4" />
+              Recepten
+            </TabsTrigger>
+          </TabsList>
         </div>
 
         {/* Restaurant Videos Tab */}
