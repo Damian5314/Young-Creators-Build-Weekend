@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { MapContainer, TileLayer } from 'react-leaflet';
+import { MapContainer, TileLayer, CircleMarker, Popup } from 'react-leaflet';
 import { AppLayout } from '@/shared/components';
 import { supabase } from '@/integrations/supabase/client';
 import { Restaurant } from '@/shared/types';
@@ -90,6 +90,24 @@ export default function MapPage() {
                 onViewDetails={handleMarkerClick}
               />
             ))}
+
+            {/* User location marker with blur effect */}
+            <CircleMarker
+              center={userLocation}
+              radius={10}
+              pathOptions={{
+                fillColor: '#3b82f6',
+                fillOpacity: 0.8,
+                color: '#ffffff',
+                weight: 3,
+              }}
+            >
+              <Popup>
+                <div className="text-center">
+                  <p className="font-semibold">Je locatie</p>
+                </div>
+              </Popup>
+            </CircleMarker>
           </MapContainer>
         )}
       </div>

@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Heart, Bookmark, MapPin, Clock, ChevronRight, ShoppingBag, CalendarCheck } from 'lucide-react';
+import { Heart, Bookmark, MapPin, Clock, ChevronRight, ShoppingBag, CalendarCheck, Share2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { VideoWithRestaurant } from '@/shared/types';
 import { cn } from '@/shared/utils';
@@ -14,6 +14,7 @@ interface VideoCardProps {
   onSave: () => void;
   onOrder: () => void;
   onReserve: () => void;
+  onShare: () => void;
 }
 
 export function VideoCard({
@@ -24,6 +25,7 @@ export function VideoCard({
   onSave,
   onOrder,
   onReserve,
+  onShare,
 }: VideoCardProps) {
   const navigate = useNavigate();
   const videoRef = useRef<HTMLVideoElement>(null);
@@ -135,6 +137,10 @@ export function VideoCard({
 
         <Button variant="action" size="iconLg" onClick={onReserve} className="shadow-lg backdrop-blur-sm">
           <CalendarCheck className="h-6 w-6" />
+        </Button>
+
+        <Button variant="action" size="iconLg" onClick={onShare} className="shadow-lg backdrop-blur-sm">
+          <Share2 className="h-6 w-6" />
         </Button>
       </div>
 

@@ -1,11 +1,11 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { ArrowLeft, MapPin, Clock, Star, Play, ShoppingBag, CalendarCheck, Bookmark, Heart } from 'lucide-react';
+import { ArrowLeft, MapPin, Clock, Star, Play, ShoppingBag, CalendarCheck, Bookmark, Heart, Share2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { supabase } from '@/integrations/supabase/client';
 import { Restaurant, Video } from '@/shared/types';
-import { SaveToCollectionModal, ActionModal } from '@/features/home/components';
+import { SaveToCollectionModal, ActionModal, ShareModal } from '@/features/home/components';
 import { useAuth } from '@/shared/hooks';
 import { toast } from 'sonner';
 
@@ -20,10 +20,11 @@ export default function RestaurantDetail() {
   
   // Modals
   const [saveModal, setSaveModal] = useState(false);
-  const [actionModal, setActionModal] = useState<{ open: boolean; type: 'order' | 'reserve' }>({ 
-    open: false, 
-    type: 'order' 
+  const [actionModal, setActionModal] = useState<{ open: boolean; type: 'order' | 'reserve' }>({
+    open: false,
+    type: 'order'
   });
+  const [shareModal, setShareModal] = useState(false);
 
   useEffect(() => {
     if (id) {
@@ -175,24 +176,24 @@ export default function RestaurantDetail() {
 
           {/* Action buttons */}
           <div className="grid grid-cols-2 gap-3 mb-8">
-            <Button 
-              variant="order" 
+            <Button
+              variant="order"
               size="lg"
               onClick={() => setActionModal({ open: true, type: 'order' })}
             >
               <ShoppingBag className="h-5 w-5 mr-2" />
               Order
             </Button>
-            <Button 
-              variant="secondary" 
+            <Button
+              variant="secondary"
               size="lg"
               onClick={() => setActionModal({ open: true, type: 'reserve' })}
             >
               <CalendarCheck className="h-5 w-5 mr-2" />
               Reserve
             </Button>
-            <Button 
-              variant="secondary" 
+            <Button
+              variant="secondary"
               size="lg"
               onClick={() => {
                 if (!user) {
@@ -202,10 +203,17 @@ export default function RestaurantDetail() {
                 }
                 setSaveModal(true);
               }}
-              className="col-span-2"
             >
               <Bookmark className="h-5 w-5 mr-2" />
-              Save to Collection
+              Save
+            </Button>
+            <Button
+              variant="secondary"
+              size="lg"
+              onClick={() => setShareModal(true)}
+            >
+              <Share2 className="h-5 w-5 mr-2" />
+              Delen
             </Button>
           </div>
 
@@ -286,6 +294,14 @@ export default function RestaurantDetail() {
         onClose={() => setActionModal({ ...actionModal, open: false })}
         type={actionModal.type}
         restaurantName={restaurant.name}
+      />
+
+      <ShareModal
+        isOpen={shareModal}
+        onClose={() => setShareModal(false)}
+        itemId={restaurant.id}
+        itemType="RESTAURANT"
+        itemName={restaurant.name}
       />
     </div>
   );

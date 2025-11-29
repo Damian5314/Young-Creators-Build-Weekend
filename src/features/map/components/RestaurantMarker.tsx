@@ -1,6 +1,6 @@
 import { Marker, Popup } from 'react-leaflet';
 import { Icon } from 'leaflet';
-import { MapPin, Star, Euro } from 'lucide-react';
+import { MapPin, Star, Euro, Navigation, Info } from 'lucide-react';
 import { Restaurant } from '@/shared/types';
 
 const restaurantIcon = new Icon({
@@ -19,13 +19,27 @@ interface RestaurantMarkerProps {
 }
 
 export function RestaurantMarker({ restaurant, onViewDetails }: RestaurantMarkerProps) {
+  const handleNavigate = () => {
+    const destination = `${restaurant.latitude},${restaurant.longitude}`;
+    const label = encodeURIComponent(restaurant.name);
+
+    // Detect platform
+    const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
+    const isAndroid = /Android/.test(navigator.userAgent);
+
+    if (isIOS) {
+      window.open(`maps://maps.apple.com/?daddr=${destination}&q=${label}`, '_blank');
+    } else if (isAndroid) {
+      window.open(`geo:0,0?q=${destination}(${label})`, '_blank');
+    } else {
+      window.open(`https://www.google.com/maps/dir/?api=1&destination=${destination}&destination_place_id=${label}`, '_blank');
+    }
+  };
+
   return (
     <Marker
       position={[restaurant.latitude, restaurant.longitude]}
       icon={restaurantIcon}
-      eventHandlers={{
-        click: () => onViewDetails(restaurant.id),
-      }}
     >
       <Popup>
         <div className="min-w-[200px]">
@@ -74,12 +88,22 @@ export function RestaurantMarker({ restaurant, onViewDetails }: RestaurantMarker
             </p>
           )}
 
-          <button
-            onClick={() => onViewDetails(restaurant.id)}
-            className="w-full mt-2 px-3 py-1.5 bg-primary text-primary-foreground rounded-md text-sm font-medium hover:bg-primary/90 transition-colors"
-          >
-            Bekijk details
-          </button>
+          <div className="flex gap-2 mt-2">
+            <button
+              onClick={() => onViewDetails(restaurant.id)}
+              className="flex-1 px-3 py-1.5 bg-primary text-primary-foreground rounded-md text-sm font-medium hover:bg-primary/90 transition-colors flex items-center justify-center gap-1"
+            >
+              <Info className="h-4 w-4" />
+              Info
+            </button>
+            <button
+              onClick={handleNavigate}
+              className="flex-1 px-3 py-1.5 bg-blue-600 text-white rounded-md text-sm font-medium hover:bg-blue-700 transition-colors flex items-center justify-center gap-1"
+            >
+              <Navigation className="h-4 w-4" />
+              Navigeer
+            </button>
+          </div>
         </div>
       </Popup>
     </Marker>
