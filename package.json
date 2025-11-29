@@ -1,14 +1,21 @@
 {
-  "name": "vite_react_shadcn_ts",
+  "name": "flavorswipe",
   "private": true,
-  "version": "0.0.0",
+  "version": "1.0.0",
   "type": "module",
   "scripts": {
     "dev": "vite",
+    "dev:backend": "npm run dev --prefix backend",
+    "dev:all": "concurrently \"npm run dev\" \"npm run dev:backend\"",
     "build": "vite build",
+    "build:backend": "npm run build --prefix backend",
+    "build:all": "npm run build && npm run build:backend",
     "build:dev": "vite build --mode development",
+    "start:backend": "npm run start --prefix backend",
     "lint": "eslint .",
-    "preview": "vite preview"
+    "lint:backend": "npm run lint --prefix backend",
+    "preview": "vite preview",
+    "install:all": "npm install && cd backend && npm install"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.10.0",
@@ -67,6 +74,7 @@
     "zod": "^3.25.76"
   },
   "devDependencies": {
+    "concurrently": "^8.2.2",
     "@eslint/js": "^9.32.0",
     "@tailwindcss/typography": "^0.5.16",
     "@types/node": "^22.16.5",

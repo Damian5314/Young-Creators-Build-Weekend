@@ -1,7 +1,7 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { User, MapPin, Settings, LogOut, ChevronRight, Store, Check, Loader2 } from 'lucide-react';
+import { User, MapPin, LogOut, ChevronRight, Store, Check, Loader2 } from 'lucide-react';
 import { AppLayout } from '@/components/layout/AppLayout';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -21,13 +21,28 @@ const DIETARY_OPTIONS = [
 export default function Profile() {
   const navigate = useNavigate();
   const { user, profile, signOut, refreshProfile } = useAuth();
-  const [editing, setEditing] = useState(false);
   const [saving, setSaving] = useState(false);
   const [formData, setFormData] = useState({
     name: profile?.name || '',
     city: profile?.city || '',
     dietary_preferences: profile?.dietary_preferences || [],
   });
+
+  // Sync formData with profile when profile loads/changes
+  useEffect(() => {
+    if (profile) {
+      setFormData({
+        name: profile.name || '',
+        city: profile.city || '',
+        dietary_preferences: profile.dietary_preferences || [],
+      });
+    }
+  }, [profile]);
+
+  const hasChanges =
+    formData.name !== (profile?.name || '') ||
+    formData.city !== (profile?.city || '') ||
+    JSON.stringify(formData.dietary_preferences) !== JSON.stringify(profile?.dietary_preferences || []);
 
   if (!user) {
     return (
@@ -64,7 +79,6 @@ export default function Profile() {
     } else {
       await refreshProfile();
       toast.success('Profile updated!');
-      setEditing(false);
     }
 
     setSaving(false);
@@ -92,20 +106,10 @@ export default function Profile() {
         <div className="page-header">
           <div className="flex items-center justify-between mb-8">
             <h1 className="page-title">Profile</h1>
-            {!editing ? (
-              <Button variant="secondary" size="sm" onClick={() => setEditing(true)} className="gap-1.5">
-                <Settings className="h-4 w-4" />
-                Edit
+            {hasChanges && (
+              <Button size="sm" onClick={handleSave} disabled={saving}>
+                {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Save'}
               </Button>
-            ) : (
-              <div className="flex gap-2">
-                <Button variant="secondary" size="sm" onClick={() => setEditing(false)}>
-                  Cancel
-                </Button>
-                <Button size="sm" onClick={handleSave} disabled={saving}>
-                  {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Save'}
-                </Button>
-              </div>
             )}
           </div>
 
@@ -113,20 +117,16 @@ export default function Profile() {
           <div className="flex items-center gap-4 mb-8">
             <div className="h-20 w-20 rounded-2xl bg-gradient-primary flex items-center justify-center shadow-lg">
               <span className="text-3xl font-bold text-primary-foreground">
-                {(profile?.name?.[0] || user.email?.[0] || 'U').toUpperCase()}
+                {(formData.name?.[0] || user.email?.[0] || 'U').toUpperCase()}
               </span>
             </div>
             <div className="flex-1">
-              {editing ? (
-                <Input
-                  value={formData.name}
-                  onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                  placeholder="Your name"
-                  className="mb-2 h-12"
-                />
-              ) : (
-                <h2 className="text-xl font-display font-bold mb-1">{profile?.name || 'User'}</h2>
-              )}
+              <Input
+                value={formData.name}
+                onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                placeholder="Your name"
+                className="mb-2 h-12"
+              />
               <p className="text-sm text-muted-foreground">{user.email}</p>
             </div>
           </div>
@@ -138,16 +138,12 @@ export default function Profile() {
             <MapPin className="h-4 w-4 text-primary" />
             Location
           </h3>
-          {editing ? (
-            <Input
-              value={formData.city}
-              onChange={(e) => setFormData({ ...formData, city: e.target.value })}
-              placeholder="Your city"
-              className="h-12"
-            />
-          ) : (
-            <p className="text-foreground font-medium">{profile?.city || 'Not set'}</p>
-          )}
+          <Input
+            value={formData.city}
+            onChange={(e) => setFormData({ ...formData, city: e.target.value })}
+            placeholder="Your city"
+            className="h-12"
+          />
         </div>
 
         {/* Dietary preferences */}
@@ -159,13 +155,12 @@ export default function Profile() {
               return (
                 <button
                   key={option.id}
-                  onClick={() => editing && togglePreference(option.id)}
-                  disabled={!editing}
+                  onClick={() => togglePreference(option.id)}
                   className={`px-4 py-2.5 rounded-xl text-sm font-medium transition-all flex items-center gap-2 border ${
                     isSelected
                       ? 'bg-primary text-primary-foreground border-primary'
-                      : 'bg-secondary text-foreground border-border'
-                  } ${!editing && 'opacity-60'} ${editing && 'hover:border-primary/50'}`}
+                      : 'bg-secondary text-foreground border-border hover:border-primary/50'
+                  }`}
                 >
                   <span>{option.emoji}</span>
                   {option.label}
