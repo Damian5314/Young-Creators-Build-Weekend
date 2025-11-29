@@ -81,31 +81,33 @@ export default function Cook() {
 
   return (
     <AppLayout>
-      <div className="min-h-screen p-4 pb-24">
+      <div className="page-container">
         {/* Header */}
-        <div className="text-center pt-8 pb-6">
-          <div className="h-16 w-16 mx-auto mb-4 rounded-2xl bg-primary/10 flex items-center justify-center">
-            <ChefHat className="h-8 w-8 text-primary" />
+        <div className="text-center page-header">
+          <div className="h-16 w-16 mx-auto mb-4 rounded-2xl bg-gradient-primary flex items-center justify-center shadow-lg">
+            <ChefHat className="h-8 w-8 text-white" />
           </div>
-          <h1 className="text-2xl font-display font-bold mb-2">AI Cooking Assistant</h1>
-          <p className="text-muted-foreground">
-            Tell me what ingredients you have, and I'll suggest recipes!
+          <h1 className="page-title mb-2">AI Cooking Assistant</h1>
+          <p className="text-muted-foreground max-w-xs mx-auto">
+            Tell me what ingredients you have, and I'll suggest delicious recipes!
           </p>
         </div>
 
         {/* Input section */}
         <div className="max-w-lg mx-auto mb-8">
-          <Textarea
-            placeholder="e.g. chicken, rice, tomatoes, onions, garlic..."
-            value={ingredients}
-            onChange={(e) => setIngredients(e.target.value)}
-            className="min-h-[120px] bg-secondary border-0 text-lg"
-          />
-          
+          <div className="card-elevated p-0 overflow-hidden">
+            <Textarea
+              placeholder="e.g. chicken, rice, tomatoes, onions, garlic..."
+              value={ingredients}
+              onChange={(e) => setIngredients(e.target.value)}
+              className="min-h-[140px] bg-transparent border-0 text-base p-4 resize-none focus-visible:ring-0"
+            />
+          </div>
+
           <Button
             onClick={generateRecipes}
             disabled={loading || !ingredients.trim()}
-            className="w-full mt-4"
+            className="w-full mt-4 h-14 text-base font-semibold"
             size="lg"
           >
             {loading ? (
@@ -124,7 +126,7 @@ export default function Cook() {
           {/* Future feature placeholder */}
           <Button
             variant="secondary"
-            className="w-full mt-3 opacity-50 cursor-not-allowed"
+            className="w-full mt-3 h-12 opacity-50"
             size="lg"
             disabled
           >
@@ -140,8 +142,8 @@ export default function Cook() {
               animate={{ opacity: 1, y: 0 }}
               className="max-w-lg mx-auto space-y-4"
             >
-              <h2 className="text-lg font-display font-bold">
-                Here's what you can make:
+              <h2 className="section-title text-center">
+                Here's what you can make
               </h2>
 
               {recipes.map((recipe, index) => (
@@ -150,12 +152,12 @@ export default function Cook() {
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: index * 0.1 }}
-                  className="bg-card rounded-2xl overflow-hidden border border-border"
+                  className="card-elevated overflow-hidden"
                 >
                   {/* Recipe header */}
                   <button
                     onClick={() => setExpandedRecipe(expandedRecipe === index ? null : index)}
-                    className="w-full p-4 flex items-start justify-between text-left"
+                    className="w-full flex items-start justify-between text-left"
                   >
                     <div className="flex-1">
                       <h3 className="font-display font-bold text-lg mb-1">
@@ -165,11 +167,9 @@ export default function Cook() {
                         {recipe.description}
                       </p>
                     </div>
-                    {expandedRecipe === index ? (
-                      <ChevronUp className="h-5 w-5 text-muted-foreground mt-1" />
-                    ) : (
-                      <ChevronDown className="h-5 w-5 text-muted-foreground mt-1" />
-                    )}
+                    <div className={`p-2 rounded-full bg-secondary transition-transform ${expandedRecipe === index ? 'rotate-180' : ''}`}>
+                      <ChevronDown className="h-4 w-4 text-muted-foreground" />
+                    </div>
                   </button>
 
                   {/* Expanded content */}
@@ -181,16 +181,16 @@ export default function Cook() {
                         exit={{ height: 0, opacity: 0 }}
                         className="overflow-hidden"
                       >
-                        <div className="px-4 pb-4 space-y-4">
+                        <div className="pt-4 space-y-5">
                           {/* Ingredients */}
-                          <div>
-                            <h4 className="text-sm font-semibold text-primary mb-2">
+                          <div className="bg-secondary/50 rounded-xl p-4">
+                            <h4 className="section-title text-primary">
                               Ingredients
                             </h4>
-                            <ul className="space-y-1">
+                            <ul className="space-y-2">
                               {recipe.ingredients.map((ing, i) => (
-                                <li key={i} className="text-sm text-muted-foreground flex items-start gap-2">
-                                  <span className="text-primary">•</span>
+                                <li key={i} className="text-sm text-foreground flex items-start gap-2">
+                                  <span className="text-primary mt-0.5">•</span>
                                   {ing}
                                 </li>
                               ))}
@@ -199,16 +199,16 @@ export default function Cook() {
 
                           {/* Steps */}
                           <div>
-                            <h4 className="text-sm font-semibold text-primary mb-2">
+                            <h4 className="section-title text-primary">
                               Instructions
                             </h4>
-                            <ol className="space-y-2">
+                            <ol className="space-y-3">
                               {recipe.steps.map((step, i) => (
-                                <li key={i} className="text-sm text-muted-foreground flex items-start gap-3">
-                                  <span className="h-6 w-6 rounded-full bg-primary/10 text-primary flex items-center justify-center text-xs font-bold flex-shrink-0">
+                                <li key={i} className="text-sm text-foreground flex items-start gap-3">
+                                  <span className="h-6 w-6 rounded-full bg-primary text-primary-foreground flex items-center justify-center text-xs font-bold flex-shrink-0">
                                     {i + 1}
                                   </span>
-                                  {step}
+                                  <span className="pt-0.5">{step}</span>
                                 </li>
                               ))}
                             </ol>
@@ -218,8 +218,7 @@ export default function Cook() {
                           <Button
                             onClick={() => saveRecipe(recipe, index)}
                             disabled={savingRecipe === index}
-                            variant="secondary"
-                            className="w-full"
+                            className="w-full h-12"
                           >
                             {savingRecipe === index ? (
                               <Loader2 className="h-4 w-4 animate-spin mr-2" />

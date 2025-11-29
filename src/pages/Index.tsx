@@ -164,8 +164,9 @@ export default function Index() {
   if (loading || authLoading) {
     return (
       <AppLayout>
-        <div className="flex items-center justify-center h-screen">
-          <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        <div className="flex flex-col items-center justify-center h-screen gap-4">
+          <div className="h-12 w-12 border-3 border-primary border-t-transparent rounded-full animate-spin" />
+          <p className="text-sm text-muted-foreground">Loading delicious content...</p>
         </div>
       </AppLayout>
     );
@@ -174,12 +175,12 @@ export default function Index() {
   if (videos.length === 0) {
     return (
       <AppLayout>
-        <div className="flex flex-col items-center justify-center h-screen px-6 text-center">
-          <div className="h-20 w-20 rounded-full bg-primary/10 flex items-center justify-center mb-6">
+        <div className="empty-state h-screen">
+          <div className="empty-state-icon">
             <span className="text-4xl">🍽️</span>
           </div>
-          <h1 className="text-2xl font-display font-bold mb-2">No videos yet</h1>
-          <p className="text-muted-foreground">
+          <h1 className="empty-state-title">No videos yet</h1>
+          <p className="empty-state-description">
             Check back soon for delicious food content!
           </p>
         </div>

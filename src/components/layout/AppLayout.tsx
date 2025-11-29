@@ -9,7 +9,7 @@ interface AppLayoutProps {
 export function AppLayout({ children, hideNav = false }: AppLayoutProps) {
   return (
     <div className="min-h-screen bg-background">
-      <main className={hideNav ? '' : 'pb-20'}>
+      <main className={hideNav ? '' : 'pb-14'}>
         {children}
       </main>
       {!hideNav && <BottomNav />}
