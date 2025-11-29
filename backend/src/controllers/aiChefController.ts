@@ -1,14 +1,4 @@
 import { Request, Response } from 'express';
-<<<<<<< HEAD
-import OpenAI from 'openai';
-
-// Initialize OpenAI client
-// Note: This will throw if OPENAI_API_KEY is not set when making a request, 
-// so we should handle that gracefully or ensure it's set.
-const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY || 'dummy-key', // Prevent crash on init if key is missing
-  dangerouslyAllowBrowser: false
-});
 
 export const generateRecipes = async (req: Request, res: Response) => {
   try {
@@ -19,87 +9,59 @@ export const generateRecipes = async (req: Request, res: Response) => {
       return;
     }
 
-    // Check if API key is configured
-    if (!process.env.OPENAI_API_KEY) {
-      console.warn('OPENAI_API_KEY is not set. Returning mock data.');
-      // Return mock data if no key
-      const mockRecipes = [
-        {
-          title: "Mock Recipe 1: " + (mode === 'meal' ? ingredients : "Special Dish"),
-          description: "A delicious mock recipe generated because no API key was found.",
-          ingredients: ["Ingredient 1", "Ingredient 2", "Love"],
-          steps: ["Mix everything.", "Cook it.", "Enjoy."]
-        },
-        {
-          title: "Mock Recipe 2: Spicy " + (mode === 'meal' ? ingredients : "Delight"),
-          description: "Another tasty mock option.",
-          ingredients: ["Spice", "Everything nice"],
-          steps: ["Heat pan.", "Add spice.", "Serve hot."]
-        }
-      ];
-      res.json({ data: { recipes: mockRecipes } });
+    const webhookUrl = process.env.N8N_WEBHOOK_URL;
+
+    if (!webhookUrl) {
+      console.error('N8N_WEBHOOK_URL is not defined in .env');
+      res.status(500).json({ error: 'Server configuration error' });
       return;
     }
 
-    const prompt = mode === 'meal' 
-      ? `Suggest 3 recipes for a meal: ${ingredients}. Return a JSON object with a "recipes" array. Each recipe should have: title, description, ingredients (array of strings), steps (array of strings).`
-      : `Suggest 3 recipes using these ingredients: ${ingredients}. Return a JSON object with a "recipes" array. Each recipe should have: title, description, ingredients (array of strings), steps (array of strings).`;
+    console.log(`Sending request to n8n: ${webhookUrl}`);
 
-    const completion = await openai.chat.completions.create({
-      messages: [
-        { 
-          role: "system", 
-          content: "You are a helpful chef assistant. You output JSON only. The response must be a valid JSON object with a 'recipes' key containing an array of recipes." 
-        }, 
-        { role: "user", content: prompt }
-      ],
-      model: "gpt-3.5-turbo",
-      response_format: { type: "json_object" },
+    const response = await fetch(webhookUrl, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ ingredients, mode }),
     });
 
-    const content = completion.choices[0].message.content;
-    if (!content) {
-      throw new Error('No content received from OpenAI');
+    if (!response.ok) {
+      throw new Error(`n8n webhook failed with status: ${response.status}`);
     }
+
+    const data = await response.json();
+    console.log('Received response from n8n:', data);
     
-    const data = JSON.parse(content);
-    res.json({ data });
+    let recipesData = data;
+
+    // If data is a string (which can happen if n8n just passes the content string), parse it.
+    if (typeof data === 'string') {
+        try {
+            recipesData = JSON.parse(data);
+        } catch (e) {
+            console.error('Failed to parse string response from n8n:', e);
+        }
+    } else if (data.content && typeof data.content === 'string') {
+        // If n8n wrapped it in { content: "..." }
+        try {
+            recipesData = JSON.parse(data.content);
+        } catch (e) {
+             // Maybe it's not JSON string, just use data as is if it has recipes
+             if (!data.recipes) console.error('Failed to parse content string from n8n');
+        }
+    }
+
+    // Ensure we have the recipes array
+    if (!recipesData.recipes && data.recipes) {
+        recipesData = data;
+    }
+
+    res.json({ data: recipesData });
 
   } catch (error) {
     console.error('Error generating recipes:', error);
-=======
-
-export const generateRecipes = async (req: Request, res: Response) => {
-  try {
-    const { userId, mode, input } = req.body;
-
-    console.log('Received AI Chef request:', { userId, mode, input });
-
-    // TODO: Connect to OpenAI or n8n here.
-    // For now, we return mock data based on the mode.
-
-    const mockRecipes = [
-      {
-        title: mode === 'ingredients' ? "Quick Stir Fry" : "Classic " + input,
-        description: "A delicious and easy meal based on your request.",
-        ingredients: ["Ingredient 1", "Ingredient 2", "Secret Sauce"],
-        steps: ["Prep ingredients", "Cook over high heat", "Serve and enjoy!"]
-      },
-      {
-        title: "Chef's Special",
-        description: "Something unique created just for you.",
-        ingredients: ["Love", "Passion", "Fresh Herbs"],
-        steps: ["Mix everything", "Bake at 350F", "Garnish"]
-      }
-    ];
-
-    // Simulate AI delay
-    await new Promise(resolve => setTimeout(resolve, 1500));
-
-    res.json({ recipes: mockRecipes });
-  } catch (error) {
-    console.error('Error in generateRecipes:', error);
->>>>>>> c79a04e01d48915512423bcbf407a774a8f98c81
     res.status(500).json({ error: 'Failed to generate recipes' });
   }
 };
