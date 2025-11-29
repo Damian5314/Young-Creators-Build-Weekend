@@ -5,7 +5,7 @@ import { toast } from 'sonner';
 
 import { Layout } from '@/components/Layout';
 import { VideoCard } from '@/components/VideoCard';
-import { SaveToCollectionModal, ActionModal } from '@/components/Modals';
+import { SaveToCollectionModal, ActionModal, ShareModal } from '@/components/Modals';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/lib/hooks';
@@ -35,6 +35,17 @@ export default function Home() {
     open: false,
     type: 'order',
     restaurantName: '',
+  });
+  const [shareModal, setShareModal] = useState<{
+    open: boolean;
+    itemId: string;
+    itemType: 'RESTAURANT' | 'RECIPE';
+    itemName: string;
+  }>({
+    open: false,
+    itemId: '',
+    itemType: 'RESTAURANT',
+    itemName: '',
   });
 
   useEffect(() => {
@@ -159,6 +170,7 @@ export default function Home() {
                   onSave={() => { if (!user) { toast.error('Please sign in'); navigate('/auth'); return; } setSaveModal({ open: true, videoId: video.id }); }}
                   onOrder={() => setActionModal({ open: true, type: 'order', restaurantName: video.restaurant.name })}
                   onReserve={() => setActionModal({ open: true, type: 'reserve', restaurantName: video.restaurant.name })}
+                  onShare={() => setShareModal({ open: true, itemId: video.restaurant.id, itemType: 'RESTAURANT', itemName: video.restaurant.name })}
                 />
               ))}
             </div>
@@ -175,6 +187,7 @@ export default function Home() {
 
       <SaveToCollectionModal isOpen={saveModal.open} onClose={() => setSaveModal({ open: false, videoId: null })} itemId={saveModal.videoId || ''} itemType="VIDEO" />
       <ActionModal isOpen={actionModal.open} onClose={() => setActionModal({ ...actionModal, open: false })} type={actionModal.type} restaurantName={actionModal.restaurantName} />
+      <ShareModal isOpen={shareModal.open} onClose={() => setShareModal({ ...shareModal, open: false })} itemId={shareModal.itemId} itemType={shareModal.itemType} itemName={shareModal.itemName} />
     </Layout>
   );
 }

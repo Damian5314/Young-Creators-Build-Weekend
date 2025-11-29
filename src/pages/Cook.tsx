@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ChefHat, Sparkles, Loader2, BookmarkPlus, ChevronDown } from 'lucide-react';
+import { ChefHat, Sparkles, Loader2, BookmarkPlus, ChevronDown, Share2 } from 'lucide-react';
 import { Layout } from '@/components/Layout';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
@@ -8,6 +8,7 @@ import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/lib/hooks';
 import { api } from '@/lib/api';
 import { toast } from 'sonner';
+import { ShareModal } from '@/components/Modals';
 
 interface Recipe {
   title: string;
@@ -24,6 +25,10 @@ export default function Cook() {
   const [recipes, setRecipes] = useState<Recipe[]>([]);
   const [expandedRecipe, setExpandedRecipe] = useState<number | null>(0);
   const [savingRecipe, setSavingRecipe] = useState<number | null>(null);
+  const [shareModal, setShareModal] = useState<{ open: boolean; recipeIndex: number | null }>({
+    open: false,
+    recipeIndex: null,
+  });
 
   const handleGenerate = async () => {
     if (!inputValue.trim()) {
@@ -146,10 +151,16 @@ export default function Cook() {
                             </ol>
                           </div>
 
-                          <Button onClick={() => saveRecipe(recipe, index)} disabled={savingRecipe === index} className="w-full h-12">
-                            {savingRecipe === index ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <BookmarkPlus className="h-4 w-4 mr-2" />}
-                            Save to My Recipes
-                          </Button>
+                          <div className="grid grid-cols-2 gap-3">
+                            <Button onClick={() => saveRecipe(recipe, index)} disabled={savingRecipe === index} className="h-12">
+                              {savingRecipe === index ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <BookmarkPlus className="h-4 w-4 mr-2" />}
+                              Save to My Recipes
+                            </Button>
+                            <Button variant="secondary" onClick={() => setShareModal({ open: true, recipeIndex: index })} className="h-12">
+                              <Share2 className="h-4 w-4 mr-2" />
+                              Delen
+                            </Button>
+                          </div>
                         </div>
                       </motion.div>
                     )}
@@ -160,6 +171,17 @@ export default function Cook() {
           )}
         </AnimatePresence>
       </div>
+
+      {/* Share Modal */}
+      {shareModal.recipeIndex !== null && (
+        <ShareModal
+          isOpen={shareModal.open}
+          onClose={() => setShareModal({ open: false, recipeIndex: null })}
+          itemId={`recipe-${shareModal.recipeIndex}`}
+          itemType="RECIPE"
+          itemName={recipes[shareModal.recipeIndex]?.title || ''}
+        />
+      )}
     </Layout>
   );
 }
