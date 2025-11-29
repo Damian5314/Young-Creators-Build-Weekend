@@ -223,14 +223,12 @@ export default function Index() {
       </div>
 
       {/* Modals */}
-      {saveModal.videoId && (
-        <SaveToCollectionModal
-          isOpen={saveModal.open}
-          onClose={() => setSaveModal({ open: false, videoId: null })}
-          itemId={saveModal.videoId}
-          itemType="VIDEO"
-        />
-      )}
+      <SaveToCollectionModal
+        isOpen={saveModal.open}
+        onClose={() => setSaveModal({ open: false, videoId: null })}
+        itemId={saveModal.videoId || ''}
+        itemType="VIDEO"
+      />
 
       <ActionModal
         isOpen={actionModal.open}
