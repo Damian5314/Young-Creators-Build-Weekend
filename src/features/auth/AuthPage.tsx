@@ -5,6 +5,7 @@ import { Eye, EyeOff, Mail, Lock, User, ArrowRight, Loader2 } from 'lucide-react
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useAuth } from '@/shared/hooks';
+import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { z } from 'zod';
 
@@ -28,9 +29,24 @@ export default function AuthPage() {
   const [errors, setErrors] = useState<Record<string, string>>({});
 
   useEffect(() => {
-    if (user && !authLoading) {
-      navigate('/');
-    }
+    const checkOnboardingStatus = async () => {
+      if (user && !authLoading) {
+        // Check if user has completed onboarding
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('onboarding_completed')
+          .eq('id', user.id)
+          .single();
+
+        if (profile?.onboarding_completed) {
+          navigate('/');
+        } else {
+          navigate('/onboarding');
+        }
+      }
+    };
+
+    checkOnboardingStatus();
   }, [user, authLoading, navigate]);
 
   const validateForm = () => {
@@ -73,19 +89,21 @@ export default function AuthPage() {
         );
       } else {
         toast.success('Welcome back!');
-        navigate('/');
+        // Navigation happens in useEffect after user state updates
       }
     } else {
       const { error } = await signUp(formData.email, formData.password, formData.name);
       if (error) {
         if (error.message.includes('already registered')) {
           toast.error('This email is already registered. Try logging in.');
+        } else if (error.message.includes('Email not confirmed')) {
+          toast.error('Please check your email to confirm your account, or contact support.');
         } else {
           toast.error(error.message);
         }
       } else {
-        toast.success('Account created! Welcome to FoodSwipe!');
-        navigate('/onboarding');
+        toast.success('Account created! Setting up your profile...');
+        // Navigation happens in useEffect after user state updates
       }
     }
 

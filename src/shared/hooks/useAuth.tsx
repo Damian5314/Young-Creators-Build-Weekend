@@ -65,16 +65,22 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const signUp = async (email: string, password: string, name?: string) => {
-    const redirectUrl = `${window.location.origin}/`;
-
-    const { error } = await supabase.auth.signUp({
+    const { data, error } = await supabase.auth.signUp({
       email,
       password,
       options: {
-        emailRedirectTo: redirectUrl,
         data: { name: name || email.split('@')[0] }
       }
     });
+
+    // If signup successful and user is auto-confirmed, update state
+    if (!error && data.user && data.session) {
+      setUser(data.user);
+      setSession(data.session);
+      // Wait a bit for the trigger to create the profile
+      await new Promise(resolve => setTimeout(resolve, 500));
+      await fetchProfile(data.user.id);
+    }
 
     return { error };
   };

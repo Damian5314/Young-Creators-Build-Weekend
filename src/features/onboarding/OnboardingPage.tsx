@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { MapPin, Check, ArrowRight, Loader2 } from 'lucide-react';
@@ -28,12 +28,19 @@ const CITIES = [
 
 export default function Onboarding() {
   const navigate = useNavigate();
-  const { user, refreshProfile } = useAuth();
+  const { user, loading: authLoading, refreshProfile } = useAuth();
   const [step, setStep] = useState(1);
   const [city, setCity] = useState('');
   const [customCity, setCustomCity] = useState('');
   const [preferences, setPreferences] = useState<string[]>([]);
   const [loading, setLoading] = useState(false);
+
+  // Redirect to auth if not logged in
+  useEffect(() => {
+    if (!authLoading && !user) {
+      navigate('/auth');
+    }
+  }, [user, authLoading, navigate]);
 
   const togglePreference = (pref: string) => {
     setPreferences(prev => 
@@ -44,32 +51,51 @@ export default function Onboarding() {
   };
 
   const handleComplete = async () => {
-    if (!user) return;
-    
-    setLoading(true);
-    
-    const finalCity = city === 'Other' ? customCity : city;
-    
-    const { error } = await supabase
-      .from('profiles')
-      .update({
-        city: finalCity,
-        dietary_preferences: preferences,
-        onboarding_completed: true,
-        updated_at: new Date().toISOString(),
-      })
-      .eq('id', user.id);
-
-    if (error) {
-      toast.error('Failed to save preferences');
-    } else {
-      await refreshProfile();
-      toast.success('Welcome to FoodSwipe!');
-      navigate('/');
+    if (!user) {
+      toast.error('Please sign in first');
+      navigate('/auth');
+      return;
     }
-    
+
+    setLoading(true);
+
+    const finalCity = city === 'Other' ? customCity : city;
+
+    try {
+      const { error } = await supabase
+        .from('profiles')
+        .update({
+          city: finalCity,
+          dietary_preferences: preferences,
+          onboarding_completed: true,
+          updated_at: new Date().toISOString(),
+        })
+        .eq('id', user.id);
+
+      if (error) {
+        console.error('Onboarding error:', error);
+        toast.error('Failed to save preferences: ' + error.message);
+      } else {
+        await refreshProfile();
+        toast.success('Welcome to FoodSwipe!');
+        navigate('/');
+      }
+    } catch (err) {
+      console.error('Onboarding exception:', err);
+      toast.error('Something went wrong. Please try again.');
+    }
+
     setLoading(false);
   };
+
+  // Show loading while auth is loading
+  if (authLoading) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-background flex flex-col">
