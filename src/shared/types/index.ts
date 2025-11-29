@@ -60,6 +60,9 @@ export interface Recipe {
   ingredients?: string[];
   steps?: string[];
   image_url?: string;
+  video_url?: string;
+  like_count: number;
+  view_count: number;
   source: 'AI' | 'USER';
   user_id?: string;
   created_at?: string;
