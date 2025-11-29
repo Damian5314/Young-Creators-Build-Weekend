@@ -1,12 +1,12 @@
 import { useState, useEffect } from 'react';
-import { MapContainer, TileLayer, Marker, Popup, useMap } from 'react-leaflet';
+import { MapContainer, TileLayer, Marker, Popup, useMap, CircleMarker } from 'react-leaflet';
 import { Icon } from 'leaflet';
 import { Layout } from '@/components/Layout';
 import { supabase } from '@/lib/supabase';
 import { Restaurant } from '@/lib/types';
 import { DEFAULT_LOCATION } from '@/lib/constants';
 import { useNavigate } from 'react-router-dom';
-import { MapPin, Star, Euro } from 'lucide-react';
+import { MapPin, Star, Euro, Navigation, Info } from 'lucide-react';
 import { toast } from 'sonner';
 import 'leaflet/dist/leaflet.css';
 
@@ -32,13 +32,30 @@ function MapCenterController({ center }: { center: [number, number] }) {
 
 // Restaurant marker component
 function RestaurantMarker({ restaurant, onViewDetails }: { restaurant: Restaurant; onViewDetails: (id: string) => void }) {
+  const handleNavigate = () => {
+    const destination = `${restaurant.latitude},${restaurant.longitude}`;
+    const label = encodeURIComponent(restaurant.name);
+
+    // Detect platform
+    const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
+    const isAndroid = /Android/.test(navigator.userAgent);
+
+    if (isIOS) {
+      // iOS: This will show options for Apple Maps, Google Maps, Waze, etc.
+      window.open(`maps://maps.apple.com/?daddr=${destination}&q=${label}`, '_blank');
+    } else if (isAndroid) {
+      // Android: This will show available navigation apps
+      window.open(`geo:0,0?q=${destination}(${label})`, '_blank');
+    } else {
+      // Desktop/Other: Open Google Maps in browser
+      window.open(`https://www.google.com/maps/dir/?api=1&destination=${destination}&destination_place_id=${label}`, '_blank');
+    }
+  };
+
   return (
     <Marker
       position={[restaurant.latitude, restaurant.longitude]}
       icon={restaurantIcon}
-      eventHandlers={{
-        click: () => onViewDetails(restaurant.id),
-      }}
     >
       <Popup>
         <div className="min-w-[200px]">
@@ -87,12 +104,22 @@ function RestaurantMarker({ restaurant, onViewDetails }: { restaurant: Restauran
             </p>
           )}
 
-          <button
-            onClick={() => onViewDetails(restaurant.id)}
-            className="w-full mt-2 px-3 py-1.5 bg-primary text-primary-foreground rounded-md text-sm font-medium hover:bg-primary/90 transition-colors"
-          >
-            Bekijk details
-          </button>
+          <div className="flex gap-2 mt-2">
+            <button
+              onClick={() => onViewDetails(restaurant.id)}
+              className="flex-1 px-3 py-1.5 bg-primary text-primary-foreground rounded-md text-sm font-medium hover:bg-primary/90 transition-colors flex items-center justify-center gap-1"
+            >
+              <Info className="h-4 w-4" />
+              Info
+            </button>
+            <button
+              onClick={handleNavigate}
+              className="flex-1 px-3 py-1.5 bg-blue-600 text-white rounded-md text-sm font-medium hover:bg-blue-700 transition-colors flex items-center justify-center gap-1"
+            >
+              <Navigation className="h-4 w-4" />
+              Navigeer
+            </button>
+          </div>
         </div>
       </Popup>
     </Marker>
@@ -137,7 +164,7 @@ export default function MapPage() {
 
       if (error) throw error;
 
-      setRestaurants(data || []);
+      setRestaurants((data || []) as Restaurant[]);
     } catch (error) {
       console.error('Error fetching restaurants:', error);
       toast.error('Kon restaurants niet laden');
@@ -181,6 +208,24 @@ export default function MapPage() {
                 onViewDetails={handleMarkerClick}
               />
             ))}
+
+            {/* User location marker */}
+            <CircleMarker
+              center={userLocation}
+              radius={10}
+              pathOptions={{
+                fillColor: '#3b82f6',
+                fillOpacity: 0.8,
+                color: '#ffffff',
+                weight: 3,
+              }}
+            >
+              <Popup>
+                <div className="text-center">
+                  <p className="font-semibold">Je locatie</p>
+                </div>
+              </Popup>
+            </CircleMarker>
           </MapContainer>
         )}
       </div>
