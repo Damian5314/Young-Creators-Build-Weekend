@@ -108,22 +108,24 @@ export function SaveToCollectionModal({
   };
 
   return (
-    <AnimatePresence>
+    <AnimatePresence mode="wait">
       {isOpen && (
         <motion.div
-          initial={{ opacity: 0 }}
+          initial={{ opacity: 1 }}
           animate={{ opacity: 1 }}
-          exit={{ opacity: 0 }}
-          className="fixed inset-0 z-50 flex items-end justify-center bg-background/80 backdrop-blur-sm"
+          exit={{ opacity: 1 }}
+          className="fixed inset-0 z-50 flex items-end justify-center bg-background/80 backdrop-blur-sm touch-none"
           onClick={onClose}
+          onTouchMove={(e) => e.stopPropagation()}
         >
           <motion.div
             initial={{ y: '100%' }}
             animate={{ y: 0 }}
             exit={{ y: '100%' }}
-            transition={{ type: 'spring', damping: 25, stiffness: 300 }}
-            className="w-full max-w-lg rounded-t-3xl bg-card p-6 shadow-elevated"
+            transition={{ duration: 0.3, ease: 'easeInOut' }}
+            className="w-full max-w-lg rounded-t-3xl bg-card p-6 pb-20 shadow-elevated touch-auto"
             onClick={(e) => e.stopPropagation()}
+            onTouchMove={(e) => e.stopPropagation()}
           >
             <div className="flex items-center justify-between mb-6">
               <h2 className="text-xl font-display font-bold">Save to Collection</h2>
