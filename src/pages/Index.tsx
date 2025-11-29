@@ -192,7 +192,7 @@ export default function Index() {
     <AppLayout>
       <div 
         ref={containerRef}
-        className="h-screen overflow-y-scroll snap-y snap-mandatory no-scrollbar"
+        className="h-screen overflow-y-scroll snap-y snap-mandatory no-scrollbar overscroll-none"
         onScroll={handleScroll}
       >
         {videos.map((video, index) => (
