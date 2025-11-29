@@ -245,6 +245,7 @@
     @apply bg-muted-foreground/20 rounded-full;
   }
 
+
   /* Empty state */
   .empty-state {
     @apply flex flex-col items-center justify-center py-16 px-6 text-center;
@@ -289,4 +290,24 @@
   .animation-delay-300 { animation-delay: 300ms; }
   .animation-delay-400 { animation-delay: 400ms; }
   .animation-delay-500 { animation-delay: 500ms; }
+}
+
+/* Leaflet attribution styling - outside @layer to override leaflet CSS */
+.leaflet-control-attribution {
+  background: hsl(240 10% 6% / 0.9) !important;
+  backdrop-filter: blur(8px) !important;
+  color: hsl(240 5% 65%) !important;
+  font-size: 9px !important;
+  padding: 4px 8px !important;
+  border-radius: 8px 0 0 0 !important;
+  border: none !important;
+  box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.3) !important;
+}
+
+.leaflet-control-attribution a {
+  color: hsl(16 85% 55%) !important;
+}
+
+.leaflet-control-attribution a:hover {
+  color: hsl(16 85% 65%) !important;
 }

@@ -1,0 +1,123 @@
+import { supabase } from '../config/supabase';
+import { Recipe, PaginationParams } from '../types';
+import { AppError } from '../middleware/errorHandler';
+import { generateRecipesWithAI } from './aiService';
+
+export async function getRecipes(params: PaginationParams = {}) {
+  const { page = 1, limit = 20 } = params;
+  const offset = (page - 1) * limit;
+
+  const { data, error, count } = await supabase
+    .from('recipes')
+    .select('*', { count: 'exact' })
+    .order('created_at', { ascending: false })
+    .range(offset, offset + limit - 1);
+
+  if (error) {
+    throw new AppError(`Failed to fetch recipes: ${error.message}`, 500);
+  }
+
+  return {
+    recipes: data || [],
+    total: count || 0,
+    page,
+    limit,
+    totalPages: Math.ceil((count || 0) / limit),
+  };
+}
+
+export async function getRecipeById(id: string) {
+  const { data, error } = await supabase
+    .from('recipes')
+    .select('*')
+    .eq('id', id)
+    .single();
+
+  if (error) {
+    throw new AppError(`Recipe not found: ${error.message}`, 404);
+  }
+
+  return data;
+}
+
+export async function getUserRecipes(userId: string, params: PaginationParams = {}) {
+  const { page = 1, limit = 20 } = params;
+  const offset = (page - 1) * limit;
+
+  const { data, error, count } = await supabase
+    .from('recipes')
+    .select('*', { count: 'exact' })
+    .eq('user_id', userId)
+    .order('created_at', { ascending: false })
+    .range(offset, offset + limit - 1);
+
+  if (error) {
+    throw new AppError(`Failed to fetch user recipes: ${error.message}`, 500);
+  }
+
+  return {
+    recipes: data || [],
+    total: count || 0,
+    page,
+    limit,
+  };
+}
+
+export async function createRecipe(recipe: Omit<Recipe, 'id'>, userId: string) {
+  const { data, error } = await supabase
+    .from('recipes')
+    .insert({
+      ...recipe,
+      user_id: userId,
+      source: recipe.source || 'USER',
+    })
+    .select()
+    .single();
+
+  if (error) {
+    throw new AppError(`Failed to create recipe: ${error.message}`, 500);
+  }
+
+  return data;
+}
+
+export async function generateAndSaveRecipes(ingredients: string, userId?: string) {
+  const aiRecipes = await generateRecipesWithAI(ingredients);
+
+  if (!aiRecipes.length) {
+    throw new AppError('No recipes generated', 500);
+  }
+
+  // Optionally save to database
+  if (userId) {
+    const recipesToSave = aiRecipes.map(recipe => ({
+      title: recipe.title,
+      description: recipe.description,
+      ingredients: recipe.ingredients,
+      steps: recipe.steps,
+      source: 'AI' as const,
+      user_id: userId,
+    }));
+
+    const { error } = await supabase.from('recipes').insert(recipesToSave);
+    if (error) {
+      console.warn('Failed to save AI recipes:', error);
+    }
+  }
+
+  return aiRecipes;
+}
+
+export async function deleteRecipe(id: string, userId: string) {
+  const { error } = await supabase
+    .from('recipes')
+    .delete()
+    .eq('id', id)
+    .eq('user_id', userId);
+
+  if (error) {
+    throw new AppError(`Failed to delete recipe: ${error.message}`, 500);
+  }
+
+  return { success: true };
+}
