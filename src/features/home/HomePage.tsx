@@ -166,13 +166,9 @@ export default function HomePage() {
       >
         {/* Fixed Tabs Header */}
         <div
-          className="fixed top-0 left-0 right-0 z-30 backdrop-blur-xl border-b border-white/10"
-          style={{
-            background: 'rgba(0, 0, 0, 0.3)',
-            boxShadow: '0 8px 32px 0 rgba(0, 0, 0, 0.2)',
-          }}
+          className="fixed top-0 left-0 right-0 z-30 backdrop-blur-xl border-b border-white/10 glass-header"
         >
-          <div className="px-4 pt-3 pb-2" style={{ paddingTop: 'env(safe-area-inset-top, 12px)' }}>
+          <div className="px-4 pt-3 pb-2 safe-top-with-padding">
             <TabsList className="grid w-full grid-cols-2 h-11 bg-white/10 backdrop-blur-md border border-white/20">
               <TabsTrigger
                 value="restaurants"
