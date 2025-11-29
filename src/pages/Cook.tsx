@@ -12,9 +12,9 @@ import {
 import { Layout } from "@/components/Layout";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import { supabase } from "@/lib/supabase";
-import { useAuth } from "@/lib/hooks";
-import { api } from "@/lib/api";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/shared/hooks";
+import { api } from "@/api/client";
 import { toast } from "sonner";
 import { ShareModal } from "@/components/Modals";
 
@@ -59,6 +59,7 @@ export default function Cook() {
 
     try {
       const token = await getToken();
+      console.log("Generating recipes with input:", inputValue);
       const response = await api.post<{ data: { recipes: Recipe[] } }>(
         "/recipes/generate",
         {
@@ -67,10 +68,16 @@ export default function Cook() {
         },
         token || undefined
       );
+      console.log("API Response:", response);
+
       if (response.data?.recipes) {
+        console.log("Recipes found:", response.data.recipes);
         setRecipes(response.data.recipes);
         setShowResults(true);
         toast.success(`Generated ${response.data.recipes.length} recipes!`);
+      } else {
+        console.warn("No recipes in response data:", response);
+        toast.error("Received empty response from AI chef");
       }
     } catch (err) {
       console.error("Error generating recipes:", err);
