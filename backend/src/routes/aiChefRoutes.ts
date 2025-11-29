@@ -1,7 +1,7 @@
-import express from 'express';
+import { Router } from 'express';
 import { generateRecipes } from '../controllers/aiChefController';
 
-const router = express.Router();
+const router = Router();
 
 router.post('/generate', generateRecipes);
 

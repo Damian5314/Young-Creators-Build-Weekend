@@ -6,7 +6,20 @@
       "Bash(timeout 5 npm run dev:*)",
       "Bash(npx tsc:*)",
       "Bash(mkdir:*)",
-      "Bash(cat:*)"
+      "Bash(cat:*)",
+      "Bash(npm install:*)",
+      "Bash(curl:*)",
+      "Bash(__NEW_LINE__ echo \"1. HEALTH CHECK\")",
+      "Bash(__NEW_LINE__ echo \"2. VIDEOS\")",
+      "Bash(__NEW_LINE__ echo \"GET /api/videos/feed\")",
+      "Bash(__NEW_LINE__ echo \"3. RESTAURANTS\")",
+      "Bash(__NEW_LINE__ echo \"GET /api/restaurants/nearby?lat=52.37&lng=4.90\")",
+      "Bash(__NEW_LINE__ echo \"4. RECIPES\")",
+      "Bash(__NEW_LINE__ echo \"5. AI CHEF\")",
+      "Bash(__NEW_LINE__ echo \"6. COLLECTIONS (requires auth - expect 401)\")",
+      "Bash(__NEW_LINE__ echo \"==========================================\")",
+      "Bash(npm run build:*)",
+      "Bash(echo:*)"
     ],
     "deny": [],
     "ask": []

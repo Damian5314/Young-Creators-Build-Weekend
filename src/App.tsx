@@ -3,19 +3,23 @@ import { Toaster as Sonner } from '@/components/ui/sonner';
 import { TooltipProvider } from '@/components/ui/tooltip';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
-import { AuthProvider } from '@/lib/hooks';
+import { AuthProvider } from '@/shared/hooks';
 
-// Pages
-import Home from '@/pages/Home';
-import Auth from '@/pages/Auth';
-import Cook from '@/pages/Cook';
-import Collections from '@/pages/Collections';
-import Profile from '@/pages/Profile';
-import Map from '@/pages/Map';
-import Onboarding from '@/pages/Onboarding';
-import Restaurant from '@/pages/Restaurant';
-import Dashboard from '@/pages/Dashboard';
-import NotFound from '@/pages/NotFound';
+// Feature pages
+import {
+  HomePage,
+  AuthPage,
+  CookPage,
+  CollectionsPage,
+  ProfilePage,
+  MapPage,
+  OnboardingPage,
+  RestaurantDetailPage,
+  DashboardPage,
+} from '@/features';
+
+// Not Found page
+import NotFoundPage from '@/features/NotFoundPage';
 
 const queryClient = new QueryClient();
 
@@ -28,22 +32,22 @@ const App = () => (
         <BrowserRouter>
           <Routes>
             {/* Main pages */}
-            <Route path="/" element={<Home />} />
-            <Route path="/auth" element={<Auth />} />
-            <Route path="/onboarding" element={<Onboarding />} />
-            <Route path="/map" element={<Map />} />
-            <Route path="/cook" element={<Cook />} />
-            <Route path="/collections" element={<Collections />} />
-            <Route path="/profile" element={<Profile />} />
+            <Route path="/" element={<HomePage />} />
+            <Route path="/auth" element={<AuthPage />} />
+            <Route path="/onboarding" element={<OnboardingPage />} />
+            <Route path="/map" element={<MapPage />} />
+            <Route path="/cook" element={<CookPage />} />
+            <Route path="/collections" element={<CollectionsPage />} />
+            <Route path="/profile" element={<ProfilePage />} />
 
             {/* Detail pages */}
-            <Route path="/restaurant/:id" element={<Restaurant />} />
+            <Route path="/restaurant/:id" element={<RestaurantDetailPage />} />
 
             {/* Dashboard */}
-            <Route path="/dashboard/restaurant" element={<Dashboard />} />
+            <Route path="/dashboard/restaurant" element={<DashboardPage />} />
 
             {/* 404 */}
-            <Route path="*" element={<NotFound />} />
+            <Route path="*" element={<NotFoundPage />} />
           </Routes>
         </BrowserRouter>
       </TooltipProvider>
