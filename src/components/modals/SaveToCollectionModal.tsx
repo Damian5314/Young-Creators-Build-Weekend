@@ -77,7 +77,6 @@ export function SaveToCollectionModal({
     if (!error && data) {
       setCollections([...collections, data as Collection]);
       setNewName('');
-      toast.success('Collection created!');
     }
     setCreating(false);
   };
@@ -93,9 +92,8 @@ export function SaveToCollectionModal({
         .delete()
         .eq('collection_id', collectionId)
         .eq('item_id', itemId);
-      
+
       setSavedIn(savedIn.filter(id => id !== collectionId));
-      toast.success('Removed from collection');
     } else {
       await supabase
         .from('collection_items')
@@ -104,9 +102,8 @@ export function SaveToCollectionModal({
           item_type: itemType,
           item_id: itemId
         });
-      
+
       setSavedIn([...savedIn, collectionId]);
-      toast.success('Saved to collection!');
     }
   };
 

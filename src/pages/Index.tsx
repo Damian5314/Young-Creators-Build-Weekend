@@ -132,11 +132,9 @@ export default function Index() {
 
       setLikedVideos(prev => new Set([...prev, videoId]));
 
-      setVideos(prev => prev.map(v => 
+      setVideos(prev => prev.map(v =>
         v.id === videoId ? { ...v, like_count: v.like_count + 1 } : v
       ));
-
-      toast.success('Added to Favorites!');
     }
   };
 
