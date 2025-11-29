@@ -87,7 +87,7 @@ export default function Profile() {
 
   return (
     <AppLayout>
-      <div className="page-container">
+      <div className="fixed inset-0 bottom-14 overflow-y-auto overscroll-none px-4 pt-6 pb-6">
         {/* Header */}
         <div className="page-header">
           <div className="flex items-center justify-between mb-8">
