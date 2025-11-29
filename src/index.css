@@ -7,24 +7,24 @@
 @layer base {
   :root {
     /* FoodSwipe - Dark immersive theme with warm food colors */
-    --background: 240 10% 4%;
+    --background: 240 10% 3%;
     --foreground: 0 0% 98%;
 
-    --card: 240 10% 8%;
+    --card: 240 10% 6%;
     --card-foreground: 0 0% 98%;
 
-    --popover: 240 10% 8%;
+    --popover: 240 10% 7%;
     --popover-foreground: 0 0% 98%;
 
     /* Warm coral/orange - appetizing food color */
-    --primary: 16 90% 55%;
+    --primary: 16 85% 52%;
     --primary-foreground: 0 0% 100%;
 
-    --secondary: 240 8% 14%;
+    --secondary: 240 8% 12%;
     --secondary-foreground: 0 0% 98%;
 
-    --muted: 240 8% 18%;
-    --muted-foreground: 240 5% 64%;
+    --muted: 240 8% 16%;
+    --muted-foreground: 240 5% 72%;
 
     --accent: 32 95% 50%;
     --accent-foreground: 0 0% 100%;
@@ -109,19 +109,28 @@
   body {
     @apply bg-background text-foreground antialiased;
     font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
   }
 
   h1, h2, h3, h4, h5, h6 {
     font-family: 'Space Grotesk', system-ui, sans-serif;
+    letter-spacing: -0.02em;
+  }
+
+  /* Improved text rendering */
+  p, span, label {
+    @apply leading-relaxed;
   }
 }
 
 @layer components {
   /* Glass morphism card */
   .glass-card {
-    @apply backdrop-blur-xl border rounded-2xl;
+    @apply backdrop-blur-2xl border rounded-2xl;
     background: hsl(var(--glass));
     border-color: hsl(var(--glass-border));
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
   }
 
   /* Gradient text */
@@ -135,14 +144,15 @@
     box-shadow: var(--shadow-glow);
   }
 
-  /* Video card overlay gradient */
+  /* Video card overlay gradient - stronger for better readability */
   .video-overlay {
     background: linear-gradient(
       180deg,
       transparent 0%,
-      transparent 40%,
-      hsl(240, 10%, 4% / 0.4) 60%,
-      hsl(240, 10%, 4% / 0.9) 100%
+      transparent 30%,
+      hsl(240, 10%, 3% / 0.3) 50%,
+      hsl(240, 10%, 3% / 0.7) 70%,
+      hsl(240, 10%, 3% / 0.95) 100%
     );
   }
 
@@ -152,31 +162,33 @@
     box-shadow: var(--shadow-card);
   }
 
-  /* Price level dots */
+  /* Price level indicator */
   .price-dot {
     @apply w-2 h-2 rounded-full;
   }
-  
+
   .price-dot-active {
     @apply bg-primary;
   }
-  
+
   .price-dot-inactive {
     @apply bg-muted-foreground/30;
   }
 
-  /* Halal badge */
+  /* Halal badge - professional green */
   .halal-badge {
-    @apply px-2 py-0.5 rounded-full text-xs font-semibold;
-    background: hsl(var(--halal-green));
+    @apply px-2.5 py-1 rounded-full text-xs font-bold uppercase tracking-wide;
+    background: linear-gradient(135deg, hsl(142, 76%, 36%), hsl(142, 70%, 28%));
     color: white;
+    box-shadow: 0 2px 8px hsl(142, 76%, 36% / 0.3);
   }
 
-  /* Tag chip */
+  /* Tag chip - refined styling */
   .tag-chip {
-    @apply px-3 py-1 rounded-full text-sm font-medium;
+    @apply px-3 py-1.5 rounded-full text-xs font-semibold uppercase tracking-wide;
     background: hsl(var(--secondary));
-    color: hsl(var(--foreground));
+    color: hsl(var(--foreground) / 0.9);
+    border: 1px solid hsl(var(--border));
   }
 
   /* Action button */
@@ -185,25 +197,68 @@
     @apply hover:scale-110 active:scale-95;
   }
 
-  /* Bottom nav */
+  /* Bottom nav - refined */
   .bottom-nav {
-    @apply fixed bottom-0 left-0 right-0 z-50 backdrop-blur-xl border-t;
-    background: hsl(var(--glass));
+    @apply fixed bottom-0 left-0 right-0 z-50 backdrop-blur-2xl border-t;
+    background: hsl(240, 10%, 4% / 0.85);
     border-color: hsl(var(--glass-border));
     padding-bottom: env(safe-area-inset-bottom);
+    box-shadow: 0 -4px 24px rgba(0, 0, 0, 0.4);
+  }
+
+  /* Page container for consistent spacing */
+  .page-container {
+    @apply min-h-screen px-4 pt-6 pb-20;
+  }
+
+  /* Page header styling */
+  .page-header {
+    @apply pt-6 pb-4 mb-2;
+  }
+
+  .page-title {
+    @apply text-2xl font-display font-bold tracking-tight;
+  }
+
+  /* Card styling */
+  .card-elevated {
+    @apply bg-card rounded-2xl border border-border p-4;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
+  }
+
+  /* Section styling */
+  .section-title {
+    @apply text-sm font-semibold text-muted-foreground uppercase tracking-wider mb-3;
   }
 
   /* Scrollbar styling */
   .custom-scrollbar::-webkit-scrollbar {
     width: 4px;
   }
-  
+
   .custom-scrollbar::-webkit-scrollbar-track {
     background: transparent;
   }
-  
+
   .custom-scrollbar::-webkit-scrollbar-thumb {
     @apply bg-muted-foreground/20 rounded-full;
+  }
+
+  /* Empty state */
+  .empty-state {
+    @apply flex flex-col items-center justify-center py-16 px-6 text-center;
+  }
+
+  .empty-state-icon {
+    @apply h-20 w-20 rounded-2xl bg-primary/10 flex items-center justify-center mb-6;
+  }
+
+  .empty-state-title {
+    @apply text-xl font-display font-bold mb-2;
+  }
+
+  .empty-state-description {
+    @apply text-muted-foreground mb-6 max-w-xs;
   }
 }
 

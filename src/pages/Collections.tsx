@@ -150,15 +150,15 @@ export default function Collections() {
   if (!user) {
     return (
       <AppLayout>
-        <div className="flex flex-col items-center justify-center h-screen px-6 text-center">
-          <div className="h-20 w-20 rounded-full bg-primary/10 flex items-center justify-center mb-6">
+        <div className="empty-state h-screen">
+          <div className="empty-state-icon">
             <Folder className="h-10 w-10 text-primary" />
           </div>
-          <h1 className="text-2xl font-display font-bold mb-2">Sign in to view collections</h1>
-          <p className="text-muted-foreground mb-6">
+          <h1 className="empty-state-title">Sign in to view collections</h1>
+          <p className="empty-state-description">
             Save your favorite restaurants, videos, and recipes
           </p>
-          <Button onClick={() => navigate('/auth')}>Sign In</Button>
+          <Button onClick={() => navigate('/auth')} size="lg">Sign In</Button>
         </div>
       </AppLayout>
     );
@@ -166,43 +166,50 @@ export default function Collections() {
 
   return (
     <AppLayout>
-      <div className="min-h-screen p-4 pb-24">
+      <div className="page-container">
         {/* Header */}
-        <div className="flex items-center justify-between pt-8 pb-6">
-          <h1 className="text-2xl font-display font-bold">My Collections</h1>
-          <Button onClick={() => setShowCreate(true)} size="sm">
-            <Plus className="h-4 w-4 mr-1" />
+        <div className="page-header flex items-center justify-between">
+          <h1 className="page-title">My Collections</h1>
+          <Button onClick={() => setShowCreate(true)} size="sm" className="gap-1.5">
+            <Plus className="h-4 w-4" />
             New
           </Button>
         </div>
 
         {/* Collections grid */}
         {loading ? (
-          <div className="text-center py-12 text-muted-foreground">Loading...</div>
+          <div className="empty-state">
+            <div className="h-8 w-8 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+          </div>
         ) : collections.length === 0 ? (
-          <div className="text-center py-12">
-            <div className="h-16 w-16 mx-auto mb-4 rounded-2xl bg-secondary flex items-center justify-center">
-              <Folder className="h-8 w-8 text-muted-foreground" />
+          <div className="empty-state">
+            <div className="empty-state-icon">
+              <Folder className="h-10 w-10 text-primary" />
             </div>
-            <p className="text-muted-foreground mb-4">No collections yet</p>
-            <Button onClick={() => setShowCreate(true)}>Create your first collection</Button>
+            <h2 className="empty-state-title">No collections yet</h2>
+            <p className="empty-state-description">
+              Start organizing your favorite restaurants and recipes
+            </p>
+            <Button onClick={() => setShowCreate(true)} size="lg">
+              Create your first collection
+            </Button>
           </div>
         ) : (
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-2 gap-3">
             {collections.map((collection) => (
               <motion.button
                 key={collection.id}
                 whileHover={{ scale: 1.02 }}
                 whileTap={{ scale: 0.98 }}
                 onClick={() => openCollection(collection)}
-                className="bg-card rounded-2xl p-4 text-left border border-border hover:border-primary/50 transition-colors"
+                className="card-elevated text-left hover:border-primary/50 transition-all duration-200"
               >
                 <div className="h-12 w-12 rounded-xl bg-primary/10 flex items-center justify-center mb-3">
                   <Folder className="h-6 w-6 text-primary" />
                 </div>
-                <h3 className="font-semibold truncate">{collection.name}</h3>
-                <p className="text-sm text-muted-foreground">
-                  {collection.itemCount} items • {collection.type.toLowerCase()}
+                <h3 className="font-semibold truncate mb-1">{collection.name}</h3>
+                <p className="text-xs text-muted-foreground">
+                  {collection.itemCount} {collection.itemCount === 1 ? 'item' : 'items'} • {collection.type.toLowerCase()}
                 </p>
               </motion.button>
             ))}
@@ -216,47 +223,56 @@ export default function Collections() {
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-background/80 backdrop-blur-sm"
+              className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-4 bg-background/80 backdrop-blur-md"
               onClick={() => setShowCreate(false)}
             >
               <motion.div
-                initial={{ scale: 0.9, opacity: 0 }}
-                animate={{ scale: 1, opacity: 1 }}
-                exit={{ scale: 0.9, opacity: 0 }}
-                className="w-full max-w-sm rounded-3xl bg-card p-6 shadow-elevated"
+                initial={{ y: 100, opacity: 0 }}
+                animate={{ y: 0, opacity: 1 }}
+                exit={{ y: 100, opacity: 0 }}
+                transition={{ type: "spring", damping: 25, stiffness: 300 }}
+                className="w-full max-w-sm rounded-3xl bg-card p-6 shadow-elevated border border-border"
                 onClick={(e) => e.stopPropagation()}
               >
-                <h2 className="text-xl font-display font-bold mb-4">New Collection</h2>
-                
-                <Input
-                  placeholder="Collection name..."
-                  value={newName}
-                  onChange={(e) => setNewName(e.target.value)}
-                  className="mb-4"
-                />
+                <h2 className="text-xl font-display font-bold mb-6">New Collection</h2>
 
-                <div className="flex gap-2 mb-6">
-                  <Button
-                    variant={newType === 'RESTAURANT' ? 'default' : 'secondary'}
-                    onClick={() => setNewType('RESTAURANT')}
-                    className="flex-1"
-                  >
-                    Restaurants
-                  </Button>
-                  <Button
-                    variant={newType === 'RECIPE' ? 'default' : 'secondary'}
-                    onClick={() => setNewType('RECIPE')}
-                    className="flex-1"
-                  >
-                    Recipes
-                  </Button>
+                <div className="space-y-4">
+                  <div>
+                    <label className="section-title">Name</label>
+                    <Input
+                      placeholder="My favorites..."
+                      value={newName}
+                      onChange={(e) => setNewName(e.target.value)}
+                      className="h-12"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="section-title">Type</label>
+                    <div className="flex gap-2">
+                      <Button
+                        variant={newType === 'RESTAURANT' ? 'default' : 'secondary'}
+                        onClick={() => setNewType('RESTAURANT')}
+                        className="flex-1 h-12"
+                      >
+                        Restaurants
+                      </Button>
+                      <Button
+                        variant={newType === 'RECIPE' ? 'default' : 'secondary'}
+                        onClick={() => setNewType('RECIPE')}
+                        className="flex-1 h-12"
+                      >
+                        Recipes
+                      </Button>
+                    </div>
+                  </div>
                 </div>
 
-                <div className="flex gap-3">
-                  <Button variant="secondary" onClick={() => setShowCreate(false)} className="flex-1">
+                <div className="flex gap-3 mt-8">
+                  <Button variant="secondary" onClick={() => setShowCreate(false)} className="flex-1 h-12">
                     Cancel
                   </Button>
-                  <Button onClick={createCollection} disabled={!newName.trim()} className="flex-1">
+                  <Button onClick={createCollection} disabled={!newName.trim()} className="flex-1 h-12">
                     Create
                   </Button>
                 </div>

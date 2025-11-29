@@ -107,59 +107,68 @@ export function VideoCard({
       </AnimatePresence>
 
       {/* Right side action buttons */}
-      <div className="absolute right-4 bottom-32 flex flex-col gap-4 z-10">
-        <Button
-          variant="action"
-          size="iconLg"
-          onClick={onLike}
-          className={cn(isLiked && "bg-primary text-primary-foreground")}
-        >
-          <Heart className={cn("h-6 w-6", isLiked && "fill-current animate-heart-pop")} />
-        </Button>
-        <span className="text-center text-sm font-semibold text-foreground/90">
-          {video.like_count}
-        </span>
+      <div className="absolute right-3 bottom-32 flex flex-col items-center gap-4 z-10">
+        <div className="flex flex-col items-center gap-1">
+          <Button
+            variant="action"
+            size="iconLg"
+            onClick={onLike}
+            className={cn(
+              "shadow-lg backdrop-blur-sm",
+              isLiked && "bg-primary text-primary-foreground"
+            )}
+          >
+            <Heart className={cn("h-6 w-6", isLiked && "fill-current animate-heart-pop")} />
+          </Button>
+          <span className="text-xs font-bold text-foreground/90 drop-shadow-md">
+            {video.like_count > 999 ? `${(video.like_count / 1000).toFixed(1)}k` : video.like_count}
+          </span>
+        </div>
 
-        <Button variant="action" size="iconLg" onClick={onSave}>
+        <Button variant="action" size="iconLg" onClick={onSave} className="shadow-lg backdrop-blur-sm">
           <Bookmark className="h-6 w-6" />
         </Button>
 
-        <Button variant="action" size="iconLg" onClick={onOrder}>
+        <Button variant="action" size="iconLg" onClick={onOrder} className="shadow-lg backdrop-blur-sm">
           <ShoppingBag className="h-6 w-6" />
         </Button>
 
-        <Button variant="action" size="iconLg" onClick={onReserve}>
+        <Button variant="action" size="iconLg" onClick={onReserve} className="shadow-lg backdrop-blur-sm">
           <CalendarCheck className="h-6 w-6" />
         </Button>
       </div>
 
       {/* Bottom info section */}
-      <div className="absolute bottom-20 left-0 right-16 p-4 z-10">
+      <div className="absolute bottom-16 left-0 right-20 px-4 pb-4 z-10">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.2 }}
+          className="space-y-3"
         >
-          {/* Restaurant name and details */}
-          <button 
+          {/* Restaurant name with halal badge */}
+          <button
             onClick={() => navigate(`/restaurant/${video.restaurant.id}`)}
             className="text-left w-full group"
           >
-            <h2 className="text-2xl font-display font-bold text-foreground mb-1 flex items-center gap-2">
-              {video.restaurant.name}
-              <ChevronRight className="h-5 w-5 opacity-0 group-hover:opacity-100 transition-opacity" />
-            </h2>
+            <div className="flex items-center gap-2 flex-wrap">
+              <h2 className="text-2xl font-display font-bold text-foreground drop-shadow-lg">
+                {video.restaurant.name}
+              </h2>
+              {video.restaurant.halal && (
+                <span className="halal-badge">Halal</span>
+              )}
+              <ChevronRight className="h-5 w-5 text-foreground/60 opacity-0 group-hover:opacity-100 transition-opacity" />
+            </div>
           </button>
 
-          <p className="text-foreground/80 text-sm mb-3 line-clamp-2">
+          {/* Description */}
+          <p className="text-foreground/90 text-sm line-clamp-2 drop-shadow-md">
             {video.description || video.restaurant.description}
           </p>
 
-          {/* Tags row */}
-          <div className="flex flex-wrap gap-2 mb-3">
-            {video.restaurant.halal && (
-              <span className="halal-badge">Halal</span>
-            )}
+          {/* Cuisine tags */}
+          <div className="flex flex-wrap gap-2">
             {video.restaurant.cuisine_types.slice(0, 3).map((cuisine) => (
               <span key={cuisine} className="tag-chip">
                 {cuisine}
@@ -167,16 +176,16 @@ export function VideoCard({
             ))}
           </div>
 
-          {/* Meta info */}
-          <div className="flex items-center gap-4 text-sm text-foreground/70">
-            <div className="flex items-center gap-1">
-              <MapPin className="h-4 w-4" />
-              <span>{video.restaurant.city}</span>
+          {/* Meta info row */}
+          <div className="flex items-center gap-4 text-sm text-foreground/80">
+            <div className="flex items-center gap-1.5">
+              <MapPin className="h-4 w-4 text-primary" />
+              <span className="font-medium">{video.restaurant.city}</span>
             </div>
             <PriceLevel level={video.restaurant.price_level} />
             {video.restaurant.opening_hours && (
-              <div className="flex items-center gap-1">
-                <Clock className="h-4 w-4" />
+              <div className="flex items-center gap-1.5">
+                <Clock className="h-4 w-4 text-primary" />
                 <span>{video.restaurant.opening_hours}</span>
               </div>
             )}
