@@ -17,7 +17,9 @@
       "Bash(__NEW_LINE__ echo \"4. RECIPES\")",
       "Bash(__NEW_LINE__ echo \"5. AI CHEF\")",
       "Bash(__NEW_LINE__ echo \"6. COLLECTIONS (requires auth - expect 401)\")",
-      "Bash(__NEW_LINE__ echo \"==========================================\")"
+      "Bash(__NEW_LINE__ echo \"==========================================\")",
+      "Bash(npm run build:*)",
+      "Bash(echo:*)"
     ],
     "deny": [],
     "ask": []

@@ -124,6 +124,7 @@ export function MealCard({ meal, isFavorite, onToggleFavorite, onTagClick, onCli
           <div className="flex items-center gap-2">
             <button
               onClick={handleFavorite}
+              aria-label={isFavorite ? "Remove from favorites" : "Add to favorites"}
               className={cn(
                 "h-10 w-10 rounded-full flex items-center justify-center transition-all",
                 isFavorite
@@ -135,6 +136,7 @@ export function MealCard({ meal, isFavorite, onToggleFavorite, onTagClick, onCli
             </button>
             <button
               onClick={handleShare}
+              aria-label="Share recipe"
               className="h-10 w-10 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center text-white hover:bg-white/30 transition-all"
             >
               <Share2 className="h-5 w-5" />
