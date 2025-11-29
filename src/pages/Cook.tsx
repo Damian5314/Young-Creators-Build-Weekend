@@ -41,15 +41,40 @@ export default function Cook() {
       return;
     }
 
-    console.log("Generating with mode:", mode);
-    console.log("Input value:", inputValue);
+    const payload: GenerateRecipesRequest = {
+      userId: DEMO_USER_ID,
+      mode,
+      input: inputValue.trim(),
+    };
 
-    // Stub for future API call
     setLoading(true);
-    setTimeout(() => {
+    setRecipes([]);
+
+    try {
+      const response = await fetch('http://localhost:3000/api/ai-chef/generate', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(payload),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to generate recipes');
+      }
+
+      const data = await response.json();
+      
+      if (data.recipes) {
+        setRecipes(data.recipes);
+        toast.success(`Generated ${data.recipes.length} recipes!`);
+      }
+    } catch (error) {
+      console.error('Error generating recipes:', error);
+      toast.error('Failed to generate recipes. Please try again.');
+    } finally {
       setLoading(false);
-      toast.info("This is a stub. Backend integration coming soon!");
-    }, 1000);
+    }
   };
 
   /* 

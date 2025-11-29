@@ -15,7 +15,8 @@
     "lint": "eslint .",
     "lint:backend": "npm run lint --prefix backend",
     "preview": "vite preview",
-    "install:all": "npm install && cd backend && npm install"
+    "install:all": "npm install && cd backend && npm install",
+    "server": "ts-node backend/src/index.ts"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.10.0",

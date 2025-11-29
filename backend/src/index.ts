@@ -1,52 +1,22 @@
 import express from 'express';
-import { env, validateEnv } from './config/env';
-import { corsMiddleware, errorHandler, notFoundHandler } from './middleware';
-import routes from './routes';
+import cors from 'cors';
+import dotenv from 'dotenv';
+import healthRoutes from './routes/health.ts';
+import aiChefRoutes from './routes/aiChefRoutes.ts';
 
-// Validate environment variables
-validateEnv();
+dotenv.config();
 
 const app = express();
+const port = process.env.PORT || 3000;
 
-// Middleware
-app.use(corsMiddleware);
+app.use(cors());
 app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
 
-// Request logging in development
-if (env.NODE_ENV === 'development') {
-  app.use((req, res, next) => {
-    console.log(`${new Date().toISOString()} ${req.method} ${req.path}`);
-    next();
-  });
-}
+// Routes
+app.use('/health', healthRoutes);
+app.use('/api/ai-chef', aiChefRoutes);
 
-// API routes
-app.use('/api', routes);
-
-// Root endpoint
-app.get('/', (req, res) => {
-  res.json({
-    name: 'FlavorSwipe API',
-    version: '1.0.0',
-    status: 'running',
-    docs: '/api/health',
-  });
+app.listen(port, () => {
+  console.log(`Server is running on port ${port}`);
 });
 
-// Error handling
-app.use(notFoundHandler);
-app.use(errorHandler);
-
-// Start server
-const PORT = env.PORT;
-
-app.listen(PORT, () => {
-  console.log(`
-🚀 Server running on http://localhost:${PORT}
-📚 API available at http://localhost:${PORT}/api
-🏥 Health check at http://localhost:${PORT}/api/health
-  `);
-});
-
-export default app;
