@@ -112,24 +112,6 @@ export default function HomePage() {
       await supabase.from('user_likes').insert({ user_id: user.id, video_id: videoId });
       await supabase.rpc('increment_video_stat', { video_uuid: videoId, stat_type: 'like' });
 
-      const { data: favCollection } = await supabase
-        .from('collections')
-        .select('id')
-        .eq('user_id', user.id)
-        .eq('name', 'Favorites')
-        .single();
-
-      if (favCollection) {
-        await supabase.from('collection_items').upsert(
-          {
-            collection_id: favCollection.id,
-            item_type: 'VIDEO',
-            item_id: videoId,
-          },
-          { onConflict: 'collection_id,item_id' }
-        );
-      }
-
       setLikedVideos((prev) => new Set([...prev, videoId]));
       setVideos((prev) =>
         prev.map((v) => (v.id === videoId ? { ...v, like_count: v.like_count + 1 } : v))
