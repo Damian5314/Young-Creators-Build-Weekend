@@ -75,8 +75,7 @@ export default function MapPage() {
             center={userLocation}
             zoom={13}
             scrollWheelZoom={true}
-            className="h-full w-full"
-            style={{ zIndex: 0 }}
+            className="h-full w-full map-container-base"
           >
             <MapCenterController center={userLocation} />
             <TileLayer

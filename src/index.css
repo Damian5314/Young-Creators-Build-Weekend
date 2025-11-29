@@ -279,9 +279,24 @@
   .safe-top {
     padding-top: env(safe-area-inset-top);
   }
-  
+
   .safe-bottom {
     padding-bottom: env(safe-area-inset-bottom);
+  }
+
+  .safe-top-with-padding {
+    padding-top: env(safe-area-inset-top, 12px);
+  }
+
+  /* Glass header styling */
+  .glass-header {
+    background: rgba(0, 0, 0, 0.3);
+    box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.2);
+  }
+
+  /* Map container z-index fix */
+  .map-container-base {
+    z-index: 0;
   }
 
   /* Animation delays */
