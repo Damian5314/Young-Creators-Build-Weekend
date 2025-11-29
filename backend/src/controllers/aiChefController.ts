@@ -36,20 +36,34 @@ export const generateRecipes = async (req: Request, res: Response) => {
     
     let recipesData = data;
 
+    // Helper function to clean markdown code blocks
+    const cleanJsonString = (str: string) => {
+      return str.replace(/```json\n?|\n?```/g, '').trim();
+    };
+
     // If data is a string (which can happen if n8n just passes the content string), parse it.
     if (typeof data === 'string') {
         try {
-            recipesData = JSON.parse(data);
+            recipesData = JSON.parse(cleanJsonString(data));
         } catch (e) {
             console.error('Failed to parse string response from n8n:', e);
         }
     } else if (data.content && typeof data.content === 'string') {
         // If n8n wrapped it in { content: "..." }
         try {
-            recipesData = JSON.parse(data.content);
+            recipesData = JSON.parse(cleanJsonString(data.content));
         } catch (e) {
              // Maybe it's not JSON string, just use data as is if it has recipes
              if (!data.recipes) console.error('Failed to parse content string from n8n');
+        }
+    } else if (Array.isArray(data) && data[0]?.content?.[0]?.text) {
+        // Handle raw OpenAI output structure from n8n
+        // Structure: [{ content: [{ text: "..." }] }]
+        try {
+            const rawText = data[0].content[0].text;
+            recipesData = JSON.parse(cleanJsonString(rawText));
+        } catch (e) {
+            console.error('Failed to parse raw OpenAI output from n8n:', e);
         }
     }
 
