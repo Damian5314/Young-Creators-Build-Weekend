@@ -115,12 +115,9 @@ export function VideoCard({
             variant="action"
             size="iconLg"
             onClick={onLike}
-            className={cn(
-              'shadow-lg backdrop-blur-sm',
-              isLiked && 'bg-primary text-primary-foreground'
-            )}
+            className="shadow-lg backdrop-blur-sm"
           >
-            <Heart className={cn('h-6 w-6', isLiked && 'fill-current animate-heart-pop')} />
+            <Heart className={cn('h-6 w-6', isLiked ? 'fill-red-500 text-red-500' : 'text-white')} />
           </Button>
           <span className="text-xs font-bold text-foreground/90 drop-shadow-md">
             {video.like_count > 999 ? `${(video.like_count / 1000).toFixed(1)}k` : video.like_count}
