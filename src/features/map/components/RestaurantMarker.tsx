@@ -20,19 +20,30 @@ interface RestaurantMarkerProps {
 
 export function RestaurantMarker({ restaurant, onViewDetails }: RestaurantMarkerProps) {
   const handleNavigate = () => {
-    const destination = `${restaurant.latitude},${restaurant.longitude}`;
+    const lat = restaurant.latitude;
+    const lng = restaurant.longitude;
     const label = encodeURIComponent(restaurant.name);
 
     // Detect platform
-    const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
-    const isAndroid = /Android/.test(navigator.userAgent);
+    const userAgent = navigator.userAgent || navigator.vendor;
+    const isIOS = /iPad|iPhone|iPod/.test(userAgent) && !(window as unknown as { MSStream?: unknown }).MSStream;
+    const isAndroid = /Android/.test(userAgent);
+
+    // Always use Google Maps URL as it works on all platforms
+    // On mobile devices, it will open in the native Google Maps app if installed
+    const googleMapsUrl = `https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}&destination_place_id=${label}`;
 
     if (isIOS) {
-      window.open(`maps://maps.apple.com/?daddr=${destination}&q=${label}`, '_blank');
+      // Try Apple Maps first, fallback to Google Maps
+      // Using comgooglemaps:// for Google Maps app on iOS
+      const appleMapsUrl = `https://maps.apple.com/?daddr=${lat},${lng}&q=${label}`;
+      window.open(appleMapsUrl, '_blank');
     } else if (isAndroid) {
-      window.open(`geo:0,0?q=${destination}(${label})`, '_blank');
+      // Use Google Maps URL - Android will prompt to open in app
+      window.open(googleMapsUrl, '_blank');
     } else {
-      window.open(`https://www.google.com/maps/dir/?api=1&destination=${destination}&destination_place_id=${label}`, '_blank');
+      // Desktop: Open Google Maps in browser
+      window.open(googleMapsUrl, '_blank');
     }
   };
 
