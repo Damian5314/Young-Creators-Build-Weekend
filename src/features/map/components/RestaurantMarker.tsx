@@ -1,16 +1,19 @@
 import { Marker, Popup } from 'react-leaflet';
-import { Icon } from 'leaflet';
+import { DivIcon } from 'leaflet';
 import { MapPin, Star, Euro, Navigation, Info } from 'lucide-react';
 import { Restaurant } from '@/shared/types';
 
-const restaurantIcon = new Icon({
-  iconUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png',
-  iconRetinaUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png',
-  shadowUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png',
-  iconSize: [25, 41],
-  iconAnchor: [12, 41],
-  popupAnchor: [1, -34],
-  shadowSize: [41, 41],
+const restaurantIcon = new DivIcon({
+  className: 'custom-marker',
+  html: `
+    <svg width="32" height="40" viewBox="0 0 32 40" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <path d="M16 0C7.164 0 0 7.164 0 16c0 10 16 24 16 24s16-14 16-24c0-8.836-7.164-16-16-16z" fill="#10b981"/>
+      <circle cx="16" cy="16" r="6" fill="white"/>
+    </svg>
+  `,
+  iconSize: [32, 40],
+  iconAnchor: [16, 40],
+  popupAnchor: [0, -36],
 });
 
 interface RestaurantMarkerProps {
