@@ -112,31 +112,31 @@ export function VideoCard({
       <div className="absolute right-3 bottom-32 flex flex-col items-center gap-4 z-10">
         <div className="flex flex-col items-center gap-1">
           <Button
-            variant="action"
-            size="iconLg"
+            variant="ghost"
+            size="icon"
             onClick={onLike}
-            className="shadow-lg backdrop-blur-sm"
+            className="h-12 w-12 rounded-full bg-neutral-800 hover:bg-neutral-700"
           >
             <Heart className={cn('h-6 w-6', isLiked ? 'fill-red-500 text-red-500' : 'text-white')} />
           </Button>
-          <span className="text-xs font-bold text-foreground/90 drop-shadow-md">
+          <span className="text-xs font-bold text-white drop-shadow-md">
             {video.like_count > 999 ? `${(video.like_count / 1000).toFixed(1)}k` : video.like_count}
           </span>
         </div>
 
-        <Button variant="action" size="iconLg" onClick={onSave} className="shadow-lg backdrop-blur-sm">
+        <Button variant="ghost" size="icon" onClick={onSave} className="h-12 w-12 rounded-full bg-neutral-800 hover:bg-neutral-700 text-white">
           <Bookmark className="h-6 w-6" />
         </Button>
 
-        <Button variant="action" size="iconLg" onClick={onOrder} className="shadow-lg backdrop-blur-sm">
+        <Button variant="ghost" size="icon" onClick={onOrder} className="h-12 w-12 rounded-full bg-neutral-800 hover:bg-neutral-700 text-white">
           <ShoppingBag className="h-6 w-6" />
         </Button>
 
-        <Button variant="action" size="iconLg" onClick={onReserve} className="shadow-lg backdrop-blur-sm">
+        <Button variant="ghost" size="icon" onClick={onReserve} className="h-12 w-12 rounded-full bg-neutral-800 hover:bg-neutral-700 text-white">
           <CalendarCheck className="h-6 w-6" />
         </Button>
 
-        <Button variant="action" size="iconLg" onClick={onShare} className="shadow-lg backdrop-blur-sm">
+        <Button variant="ghost" size="icon" onClick={onShare} className="h-12 w-12 rounded-full bg-neutral-800 hover:bg-neutral-700 text-white">
           <Share2 className="h-6 w-6" />
         </Button>
       </div>
