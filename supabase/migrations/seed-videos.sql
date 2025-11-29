@@ -88,6 +88,117 @@ BEGIN
     END IF;
 END $$;
 
+-- Voeg Soufflé Café restaurant toe
+INSERT INTO public.restaurants (
+    name,
+    description,
+    address,
+    city,
+    latitude,
+    longitude,
+    cuisine_types,
+    halal,
+    price_level,
+    average_rating,
+    opening_hours,
+    image_url
+) VALUES (
+    'Soufflé Café',
+    'Gespecialiseerd in heerlijke soufflés en modern Frans gebak',
+    'Kerkstraat 45',
+    'Amsterdam',
+    52.3648,
+    4.8830,
+    ARRAY['French', 'Dessert', 'Café'],
+    false,
+    3,
+    4.6,
+    'Ma-Zo: 09:00-18:00',
+    'https://images.unsplash.com/photo-1555507036-ab1f4038808a?w=800'
+) ON CONFLICT DO NOTHING;
+
+-- Voeg Happy Italy restaurant toe
+INSERT INTO public.restaurants (
+    name,
+    description,
+    address,
+    city,
+    latitude,
+    longitude,
+    cuisine_types,
+    halal,
+    price_level,
+    average_rating,
+    opening_hours,
+    image_url
+) VALUES (
+    'Happy Italy',
+    'Italiaanse gerechten in een gezellige sfeer',
+    'Nieuwendijk 20',
+    'Amsterdam',
+    52.3750,
+    4.8930,
+    ARRAY['Italian', 'Pizza', 'Pasta'],
+    false,
+    2,
+    4.3,
+    'Ma-Zo: 11:00-22:00',
+    'https://images.unsplash.com/photo-1595295333158-4742f28fbd85?w=800'
+) ON CONFLICT DO NOTHING;
+
+-- Voeg de video's toe voor de nieuwe restaurants
+DO $$
+DECLARE
+    souffle_id UUID;
+    happy_italy_id UUID;
+BEGIN
+    -- Haal de restaurant IDs op
+    SELECT id INTO souffle_id FROM public.restaurants WHERE name = 'Soufflé Café' LIMIT 1;
+    SELECT id INTO happy_italy_id FROM public.restaurants WHERE name = 'Happy Italy' LIMIT 1;
+
+    -- Voeg Soufflé Café video toe
+    IF souffle_id IS NOT NULL THEN
+        INSERT INTO public.videos (
+            restaurant_id,
+            title,
+            description,
+            video_url,
+            tags,
+            like_count,
+            view_count
+        ) VALUES (
+            souffle_id,
+            'Soufflé Café Specialiteiten',
+            'Heerlijke soufflés bij Soufflé Café',
+            '/videos/restaurants/snaptik_soufflecafe7532826737416162593_v2.mp4',
+            ARRAY['souffle', 'dessert', 'amsterdam', 'french'],
+            0,
+            0
+        ) ON CONFLICT DO NOTHING;
+    END IF;
+
+    -- Voeg Happy Italy video toe
+    IF happy_italy_id IS NOT NULL THEN
+        INSERT INTO public.videos (
+            restaurant_id,
+            title,
+            description,
+            video_url,
+            tags,
+            like_count,
+            view_count
+        ) VALUES (
+            happy_italy_id,
+            'Happy Italy Gerechten',
+            'Lekkere Italiaanse gerechten bij Happy Italy',
+            '/videos/restaurants/ssstik.io_happyitalynl_1764437549266.mp4',
+            ARRAY['italian', 'pasta', 'pizza', 'amsterdam'],
+            0,
+            0
+        ) ON CONFLICT DO NOTHING;
+    END IF;
+END $$;
+
 -- Voeg de recipe videos toe aan de recipes tabel
 -- Let op: voor recipes gebruiken we de recipes tabel, niet de videos tabel
 INSERT INTO public.recipes (
@@ -122,6 +233,6 @@ INSERT INTO public.recipes (
 ) ON CONFLICT DO NOTHING;
 
 -- Controleer of alles is toegevoegd:
-SELECT 'Restaurants:', COUNT(*) FROM public.restaurants WHERE name = 'Jaffa';
-SELECT 'Videos:', COUNT(*) FROM public.videos WHERE title = 'Jaffa Shoarma';
-SELECT 'Recipes:', COUNT(*) FROM public.recipes WHERE title LIKE 'Recept Video%';
+SELECT 'Restaurants:', COUNT(*) FROM public.restaurants WHERE name IN ('Jaffa', 'Soufflé Café', 'Happy Italy');
+SELECT 'Videos:', COUNT(*) FROM public.videos WHERE title IN ('Jaffa Shoarma', 'Soufflé Café Specialiteiten', 'Happy Italy Gerechten');
+SELECT 'Recipes:', COUNT(*) FROM public.recipes WHERE title IN ('Pasta Carbonara', 'Chocolate Chip Cookies');
