@@ -127,7 +127,7 @@ export async function chatAboutRecipe(recipeId: string, payload: RecipeChatReque
   const url =
     env.RECIPE_CHAT_WEBHOOK_URL ||
     process.env.N8N_WEBHOOK_URL ||
-    'https://wishh.app.n8n.cloud/webhook-test/recipe-chat';
+    'https://wishh.app.n8n.cloud/webhook/recipe-chat';
   if (!url) {
     throw new AppError('Recipe chat webhook is not configured', 500);
   }
@@ -136,29 +136,40 @@ export async function chatAboutRecipe(recipeId: string, payload: RecipeChatReque
     throw new AppError('Recipe context is incomplete', 400);
   }
 
-  const response = await fetch(url, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({
-      recipeId,
-      ...payload,
-    }),
-  });
-
-  if (!response.ok) {
-    const errorText = await response.text();
-    console.error('Recipe chat webhook error:', response.status, errorText);
-    throw new AppError('Failed to fetch AI chef response', 502);
-  }
-
-  const text = await response.text();
-
   try {
-    return JSON.parse(text);
-  } catch (err) {
-    console.error('Recipe chat response parse error:', err, 'raw:', text);
-    throw new AppError('Invalid response from AI chef', 502);
+    const response = await fetch(url, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        recipeId,
+        ...payload,
+      }),
+    });
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error('Recipe chat webhook error:', response.status, errorText);
+      throw new AppError(
+        `Failed to fetch AI chef response from ${url} (webhook ${response.status}): ${errorText || 'no body returned'}`,
+        502
+      );
+    }
+
+    const text = await response.text();
+
+    try {
+      return JSON.parse(text);
+    } catch (err) {
+      console.error('Recipe chat response parse error:', err, 'raw:', text);
+      throw new AppError('Invalid response from AI chef', 502);
+    }
+  } catch (error) {
+    console.error('Recipe chat webhook request failed:', error);
+    if (error instanceof AppError) {
+      throw error;
+    }
+    throw new AppError('Failed to reach AI chef webhook', 502);
   }
 }
