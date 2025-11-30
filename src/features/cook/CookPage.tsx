@@ -250,21 +250,33 @@ export default function CookPage() {
               <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
-                className="max-w-lg mx-auto space-y-4 pb-20"
+                className="max-w-lg mx-auto space-y-5 pb-20"
               >
-                <div className="flex items-center justify-between mb-4">
+                <div className="flex items-center gap-3 mb-3">
                   <Button
                     variant="ghost"
+                    size="icon"
                     onClick={() => setShowResults(false)}
-                    className="gap-2"
+                    className="h-10 w-10 rounded-full border border-secondary/50"
+                    aria-label="Back to input"
                   >
                     <ArrowLeft className="h-4 w-4" />
-                    Back to Input
                   </Button>
-                  <h2 className="section-title m-0">
-                    Here's what you can make
-                  </h2>
-                  <div className="w-24" /> {/* Spacer for centering */}
+                  <div className="flex-1 text-center">
+                    <h2 className="section-title m-0">
+                      Here's what you can make
+                    </h2>
+                  </div>
+                  <div className="w-10" />
+                </div>
+
+                <div className="card-elevated bg-gradient-to-r from-primary/10 via-transparent to-secondary/10 border border-primary/20 px-4 py-3 rounded-2xl">
+                  <p className="text-xs uppercase tracking-[0.18em] text-primary font-semibold mb-1">
+                    Based on your pantry
+                  </p>
+                  <p className="text-sm text-foreground/90">
+                    {inputValue || "Your ingredients list"}
+                  </p>
                 </div>
 
                 {recipes.map((recipe, index) => (
@@ -273,123 +285,147 @@ export default function CookPage() {
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: index * 0.1 }}
-                    className="card-elevated overflow-hidden"
+                    className="bg-gradient-to-br from-primary/15 via-background to-secondary/15 rounded-3xl p-[1px] shadow-lg shadow-primary/10"
                   >
-                    <button
-                      onClick={() =>
-                        setExpandedRecipe(
-                          expandedRecipe === index ? null : index
-                        )
-                      }
-                      className="w-full flex items-start justify-between text-left"
-                    >
-                      <div className="flex-1">
-                        <h3 className="font-display font-bold text-lg mb-1">
-                          {recipe.title}
-                        </h3>
-                        <p className="text-sm text-muted-foreground line-clamp-2">
-                          {recipe.description}
-                        </p>
-                      </div>
-                      <div
-                        className={`p-2 rounded-full bg-secondary transition-transform ${
-                          expandedRecipe === index ? "rotate-180" : ""
-                        }`}
+                    <div className="w-full rounded-3xl bg-background/95 backdrop-blur-sm text-left">
+                      <button
+                        onClick={() =>
+                          setExpandedRecipe(
+                            expandedRecipe === index ? null : index
+                          )
+                        }
+                        className="w-full flex flex-col gap-3 p-4 sm:p-5"
                       >
-                        <ChevronDown className="h-4 w-4 text-muted-foreground" />
-                      </div>
-                    </button>
-
-                    <AnimatePresence>
-                      {expandedRecipe === index && (
-                        <motion.div
-                          initial={{ height: 0, opacity: 0 }}
-                          animate={{ height: "auto", opacity: 1 }}
-                          exit={{ height: 0, opacity: 0 }}
-                          className="overflow-hidden"
-                        >
-                          <div className="pt-4 space-y-5">
-                            <div className="bg-secondary/50 rounded-xl p-4">
-                              <h4 className="section-title text-primary">
-                                Ingredients
-                              </h4>
-                              <ul className="space-y-2">
-                                {recipe.ingredients.map((ing, i) => (
-                                  <li
-                                    key={i}
-                                    className="text-sm text-foreground flex items-start gap-2"
-                                  >
-                                    <span className="text-primary mt-0.5">
-                                      •
-                                    </span>
-                                    {ing}
-                                  </li>
-                                ))}
-                              </ul>
-                            </div>
-
+                        <div className="flex items-start justify-between gap-3">
+                          <div className="flex items-start gap-3">
+                            <span className="h-9 w-9 rounded-2xl bg-primary text-primary-foreground font-semibold flex items-center justify-center shadow-sm">
+                              {index + 1}
+                            </span>
                             <div>
-                              <h4 className="section-title text-primary">
-                                Instructions
-                              </h4>
-                              <ol className="space-y-3">
-                                {recipe.steps.map((step, i) => (
-                                  <li
-                                    key={i}
-                                    className="text-sm text-foreground flex items-start gap-3"
-                                  >
-                                    <span className="h-6 w-6 rounded-full bg-primary text-primary-foreground flex items-center justify-center text-xs font-bold flex-shrink-0">
-                                      {i + 1}
-                                    </span>
-                                    <span className="pt-0.5">{step}</span>
-                                  </li>
-                                ))}
-                              </ol>
+                              <p className="text-[11px] uppercase tracking-[0.2em] text-muted-foreground mb-1">
+                                AI Chef Pick
+                              </p>
+                              <h3 className="font-display font-bold text-lg leading-tight">
+                                {recipe.title}
+                              </h3>
+                              <p className="text-sm text-muted-foreground mt-1 line-clamp-2">
+                                {recipe.description}
+                              </p>
                             </div>
-
-                            <div className="grid grid-cols-2 gap-3">
-                              <Button
-                                onClick={() => saveRecipe(recipe, index)}
-                                disabled={
-                                  savingRecipe === index ||
-                                  savedRecipeIds.has(index)
-                                }
-                                className="h-12"
-                              >
-                                {savingRecipe === index ? (
-                                  <Loader2 className="h-4 w-4 animate-spin mr-2" />
-                                ) : (
-                                  <BookmarkPlus className="h-4 w-4 mr-2" />
-                                )}
-                                {savedRecipeIds.has(index) ? "Saved!" : "Save"}
-                              </Button>
-                              <Button
-                                variant="secondary"
-                                onClick={() =>
-                                  setShareModal({
-                                    open: true,
-                                    recipeIndex: index,
-                                  })
-                                }
-                                className="h-12"
-                              >
-                                <Share2 className="h-4 w-4 mr-2" />
-                                Delen
-                              </Button>
-                            </div>
-                            {savedRecipeIds.has(index) && (
-                              <Button
-                                variant="outline"
-                                onClick={() => handleSaveToCollection(index)}
-                                className="w-full h-10 mt-2"
-                              >
-                                Add to Collection
-                              </Button>
-                            )}
                           </div>
-                        </motion.div>
-                      )}
-                    </AnimatePresence>
+                          <div
+                            className={`p-2 rounded-full bg-secondary transition-transform ${
+                              expandedRecipe === index ? "rotate-180" : ""
+                            }`}
+                          >
+                            <ChevronDown className="h-4 w-4 text-muted-foreground" />
+                          </div>
+                        </div>
+
+                        <div className="flex flex-wrap gap-2 text-xs text-muted-foreground">
+                          <span className="px-3 py-1 rounded-full bg-secondary/60 text-secondary-foreground">
+                            {recipe.ingredients.length} ingredients
+                          </span>
+                          <span className="px-3 py-1 rounded-full bg-secondary/60 text-secondary-foreground">
+                            {recipe.steps.length} steps
+                          </span>
+                          <span className="px-3 py-1 rounded-full bg-primary/10 text-primary">
+                            Fresh idea
+                          </span>
+                        </div>
+                      </button>
+
+                      <AnimatePresence>
+                        {expandedRecipe === index && (
+                          <motion.div
+                            initial={{ height: 0, opacity: 0 }}
+                            animate={{ height: "auto", opacity: 1 }}
+                            exit={{ height: 0, opacity: 0 }}
+                            className="overflow-hidden border-t border-secondary/40"
+                          >
+                            <div className="pt-4 pb-5 px-4 sm:px-5 space-y-5">
+                              <div className="bg-secondary/40 rounded-xl p-4">
+                                <h4 className="section-title text-primary">
+                                  Ingredients
+                                </h4>
+                                <ul className="space-y-2">
+                                  {recipe.ingredients.map((ing, i) => (
+                                    <li
+                                      key={i}
+                                      className="text-sm text-foreground flex items-start gap-2"
+                                    >
+                                      <span className="text-primary mt-0.5">
+                                        •
+                                      </span>
+                                      {ing}
+                                    </li>
+                                  ))}
+                                </ul>
+                              </div>
+
+                              <div>
+                                <h4 className="section-title text-primary">
+                                  Instructions
+                                </h4>
+                                <ol className="space-y-3">
+                                  {recipe.steps.map((step, i) => (
+                                    <li
+                                      key={i}
+                                      className="text-sm text-foreground flex items-start gap-3"
+                                    >
+                                      <span className="h-6 w-6 rounded-full bg-primary text-primary-foreground flex items-center justify-center text-xs font-bold flex-shrink-0">
+                                        {i + 1}
+                                      </span>
+                                      <span className="pt-0.5">{step}</span>
+                                    </li>
+                                  ))}
+                                </ol>
+                              </div>
+
+                              <div className="grid grid-cols-2 gap-3">
+                                <Button
+                                  onClick={() => saveRecipe(recipe, index)}
+                                  disabled={
+                                    savingRecipe === index ||
+                                    savedRecipeIds.has(index)
+                                  }
+                                  className="h-12"
+                                >
+                                  {savingRecipe === index ? (
+                                    <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                                  ) : (
+                                    <BookmarkPlus className="h-4 w-4 mr-2" />
+                                  )}
+                                  {savedRecipeIds.has(index) ? "Saved!" : "Save"}
+                                </Button>
+                                <Button
+                                  variant="secondary"
+                                  onClick={() =>
+                                    setShareModal({
+                                      open: true,
+                                      recipeIndex: index,
+                                    })
+                                  }
+                                  className="h-12"
+                                >
+                                  <Share2 className="h-4 w-4 mr-2" />
+                                  Delen
+                                </Button>
+                              </div>
+                              {savedRecipeIds.has(index) && (
+                                <Button
+                                  variant="outline"
+                                  onClick={() => handleSaveToCollection(index)}
+                                  className="w-full h-10 mt-2"
+                                >
+                                  Add to Collection
+                                </Button>
+                              )}
+                            </div>
+                          </motion.div>
+                        )}
+                      </AnimatePresence>
+                    </div>
                   </motion.div>
                 ))}
               </motion.div>

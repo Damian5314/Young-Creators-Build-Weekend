@@ -508,8 +508,18 @@ export default function AuthPage() {
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="w-full max-w-sm"
+          className="w-full max-w-sm relative"
         >
+          <Button
+            variant="ghost"
+            size="icon"
+            className="absolute -left-2 -top-2 h-10 w-10 rounded-full border border-secondary/60"
+            onClick={() => navigate('/')}
+            aria-label="Back to home"
+          >
+            <ChevronLeft className="h-4 w-4" />
+          </Button>
+
           {/* Logo */}
           <div className="text-center mb-8">
             <div className="h-20 w-20 mx-auto mb-5 rounded-3xl bg-gradient-primary flex items-center justify-center shadow-glow">
