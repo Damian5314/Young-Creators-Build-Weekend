@@ -3,6 +3,7 @@ import recipeRoutes from './recipeRoutes';
 import restaurantRoutes from './restaurantRoutes';
 import videoRoutes from './videoRoutes';
 import collectionRoutes from './collectionRoutes';
+import paymentRoutes from './paymentRoutes.js';
 
 const router = Router();
 
@@ -16,5 +17,6 @@ router.use('/recipes', recipeRoutes);
 router.use('/restaurants', restaurantRoutes);
 router.use('/videos', videoRoutes);
 router.use('/collections', collectionRoutes);
+router.use('/payments', paymentRoutes);
 
 export default router;

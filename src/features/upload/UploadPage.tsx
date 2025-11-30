@@ -9,6 +9,8 @@ import { AppLayout } from '@/shared/components';
 import { useAuth } from '@/shared/hooks';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+import { BuyCreditsDialog } from '@/components/BuyCreditsDialog';
+import { paymentsApi } from '@/api/payments';
 
 export default function UploadPage() {
   const navigate = useNavigate();
@@ -22,6 +24,8 @@ export default function UploadPage() {
   const [thumbnailFile, setThumbnailFile] = useState<File | null>(null);
   const [thumbnailPreview, setThumbnailPreview] = useState<string | null>(null);
   const [restaurant, setRestaurant] = useState<{ id: string; name: string } | null>(null);
+  const [showBuyCreditsDialog, setShowBuyCreditsDialog] = useState(false);
+  const [videoCredits, setVideoCredits] = useState<number>(0);
 
   const [formData, setFormData] = useState({
     title: '',
@@ -30,6 +34,22 @@ export default function UploadPage() {
   });
 
   const isOwner = profile?.role === 'OWNER';
+
+  // Fetch credits for owners
+  useEffect(() => {
+    const fetchCredits = async () => {
+      if (user && isOwner) {
+        try {
+          const credits = await paymentsApi.getCredits();
+          setVideoCredits(credits);
+        } catch (error) {
+          console.error('Failed to fetch credits:', error);
+        }
+      }
+    };
+
+    fetchCredits();
+  }, [user, isOwner]);
 
   // Fetch restaurant for owners
   useEffect(() => {
@@ -131,6 +151,15 @@ export default function UploadPage() {
       return;
     }
 
+    // Check credits for restaurant owners BEFORE uploading
+    if (isOwner) {
+      if (videoCredits <= 0) {
+        toast.error('Je hebt geen video credits meer. Koop eerst credits om door te gaan.');
+        setShowBuyCreditsDialog(true);
+        return;
+      }
+    }
+
     setLoading(true);
 
     try {
@@ -165,11 +194,21 @@ export default function UploadPage() {
 
         if (error) {
           console.error('Error saving video:', error);
-          toast.error('Fout bij opslaan video');
+
+          // Check if it's a credits error
+          if (error.message?.includes('Insufficient video credits')) {
+            toast.error('Je hebt geen video credits meer. Koop eerst credits om door te gaan.');
+            setShowBuyCreditsDialog(true);
+          } else {
+            toast.error('Fout bij opslaan video');
+          }
+
           setLoading(false);
           return;
         }
 
+        // Decrement local credits count
+        setVideoCredits(videoCredits - 1);
         toast.success('Video geüpload voor je restaurant!');
       } else {
         // Regular user: add to recipes table
@@ -232,31 +271,42 @@ export default function UploadPage() {
             animate={{ opacity: 1, y: 0 }}
             className="mb-6 p-4 rounded-2xl bg-secondary"
           >
-            <div className="flex items-center gap-3">
-              {isOwner ? (
-                <>
-                  <div className="h-10 w-10 rounded-xl bg-primary/10 flex items-center justify-center">
-                    <Store className="h-5 w-5 text-primary" />
-                  </div>
-                  <div>
-                    <p className="font-medium">Restaurant Video</p>
-                    <p className="text-sm text-muted-foreground">
-                      Video wordt getoond bij {restaurant?.name || 'je restaurant'}
-                    </p>
-                  </div>
-                </>
-              ) : (
-                <>
-                  <div className="h-10 w-10 rounded-xl bg-primary/10 flex items-center justify-center">
-                    <ChefHat className="h-5 w-5 text-primary" />
-                  </div>
-                  <div>
-                    <p className="font-medium">Recept Video</p>
-                    <p className="text-sm text-muted-foreground">
-                      Video wordt getoond in de recepten feed
-                    </p>
-                  </div>
-                </>
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                {isOwner ? (
+                  <>
+                    <div className="h-10 w-10 rounded-xl bg-primary/10 flex items-center justify-center">
+                      <Store className="h-5 w-5 text-primary" />
+                    </div>
+                    <div>
+                      <p className="font-medium">Restaurant Video</p>
+                      <p className="text-sm text-muted-foreground">
+                        Video wordt getoond bij {restaurant?.name || 'je restaurant'}
+                      </p>
+                    </div>
+                  </>
+                ) : (
+                  <>
+                    <div className="h-10 w-10 rounded-xl bg-primary/10 flex items-center justify-center">
+                      <ChefHat className="h-5 w-5 text-primary" />
+                    </div>
+                    <div>
+                      <p className="font-medium">Recept Video</p>
+                      <p className="text-sm text-muted-foreground">
+                        Video wordt getoond in de recepten feed
+                      </p>
+                    </div>
+                  </>
+                )}
+              </div>
+
+              {isOwner && (
+                <div className="text-right">
+                  <p className="text-2xl font-bold text-primary">{videoCredits}</p>
+                  <p className="text-xs text-muted-foreground">
+                    credit{videoCredits !== 1 ? 's' : ''}
+                  </p>
+                </div>
               )}
             </div>
           </motion.div>
@@ -399,6 +449,23 @@ export default function UploadPage() {
           </form>
         </div>
       </div>
+
+      {/* Buy Credits Dialog - only for restaurant owners */}
+      {isOwner && (
+        <BuyCreditsDialog
+          open={showBuyCreditsDialog}
+          onOpenChange={setShowBuyCreditsDialog}
+          onPurchaseComplete={async () => {
+            // Refresh credits after purchase
+            try {
+              const credits = await paymentsApi.getCredits();
+              setVideoCredits(credits);
+            } catch (error) {
+              console.error('Failed to refresh credits:', error);
+            }
+          }}
+        />
+      )}
     </AppLayout>
   );
 }

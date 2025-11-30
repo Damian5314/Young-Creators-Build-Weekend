@@ -25,6 +25,9 @@ export const env = {
 
   // Frontend URL for CORS
   FRONTEND_URL: process.env.FRONTEND_URL || 'http://localhost:5173',
+
+  // Mollie
+  MOLLIE_API_KEY: process.env.MOLLIE_API_KEY || '',
 } as const;
 
 export function validateEnv(): void {

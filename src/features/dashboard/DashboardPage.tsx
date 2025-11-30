@@ -1,12 +1,15 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Store, Plus, Loader2, ArrowLeft } from 'lucide-react';
+import { Store, Plus, Loader2, ArrowLeft, Video as VideoIcon } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/shared/hooks';
 import { Restaurant, Video as VideoType } from '@/shared/types';
 import { toast } from 'sonner';
 import { RestaurantCard, RestaurantFormModal, VideoManagementModal } from './components';
+import { BuyCreditsDialog } from '@/components/BuyCreditsDialog';
+import { paymentsApi } from '@/api/payments';
+import { Card } from '@/components/ui/card';
 
 export default function OwnerDashboard() {
   const navigate = useNavigate();
@@ -18,6 +21,8 @@ export default function OwnerDashboard() {
   const [selectedRestaurant, setSelectedRestaurant] = useState<Restaurant | null>(null);
   const [videos, setVideos] = useState<VideoType[]>([]);
   const [saving, setSaving] = useState(false);
+  const [videoCredits, setVideoCredits] = useState<number>(0);
+  const [showBuyCreditsDialog, setShowBuyCreditsDialog] = useState(false);
 
   const [restaurantForm, setRestaurantForm] = useState({
     name: '',
@@ -39,7 +44,17 @@ export default function OwnerDashboard() {
       return;
     }
     fetchRestaurants();
+    fetchCredits();
   }, [user, profile]);
+
+  const fetchCredits = async () => {
+    try {
+      const credits = await paymentsApi.getCredits();
+      setVideoCredits(credits);
+    } catch (error) {
+      console.error('Failed to fetch credits:', error);
+    }
+  };
 
   const fetchRestaurants = async () => {
     if (!user) return;
@@ -184,6 +199,27 @@ export default function OwnerDashboard() {
         </Button>
       </div>
 
+      {/* Video Credits Card */}
+      <Card className="mb-6 p-4">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className="h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center">
+              <VideoIcon className="h-6 w-6 text-primary" />
+            </div>
+            <div>
+              <h3 className="font-semibold">Video Credits</h3>
+              <p className="text-sm text-muted-foreground">
+                Je hebt nog {videoCredits} video upload{videoCredits !== 1 ? 's' : ''} beschikbaar
+              </p>
+            </div>
+          </div>
+          <Button onClick={() => setShowBuyCreditsDialog(true)} variant="outline">
+            <Plus className="h-4 w-4 mr-1" />
+            Koop Credits
+          </Button>
+        </div>
+      </Card>
+
       {/* Restaurants list */}
       {restaurants.length === 0 ? (
         <div className="text-center py-12">
@@ -230,6 +266,13 @@ export default function OwnerDashboard() {
           restaurant={selectedRestaurant}
           videos={videos}
           onAddVideo={async (video) => {
+            // Check if user has credits
+            if (videoCredits <= 0) {
+              setShowBuyCreditsDialog(true);
+              toast.error('Je hebt geen video credits meer. Koop eerst credits om door te gaan.');
+              return;
+            }
+
             setSaving(true);
             const { error } = await supabase
               .from('videos')
@@ -241,8 +284,11 @@ export default function OwnerDashboard() {
             if (error) {
               toast.error('Failed to add video');
             } else {
+              // Decrement credits locally
+              setVideoCredits(videoCredits - 1);
               toast.success('Video added!');
               fetchVideos(selectedRestaurant.id);
+              fetchCredits(); // Refresh from server
             }
             setSaving(false);
           }}
@@ -250,6 +296,15 @@ export default function OwnerDashboard() {
           saving={saving}
         />
       )}
+
+      {/* Buy Credits Dialog */}
+      <BuyCreditsDialog
+        open={showBuyCreditsDialog}
+        onOpenChange={setShowBuyCreditsDialog}
+        onPurchaseComplete={() => {
+          fetchCredits();
+        }}
+      />
     </div>
   );
 }
