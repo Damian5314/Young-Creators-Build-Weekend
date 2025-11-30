@@ -30,7 +30,7 @@ export function VideoCard({
   const navigate = useNavigate();
   const videoRef = useRef<HTMLVideoElement>(null);
   const [showHeart, setShowHeart] = useState(false);
-  const [isMuted, setIsMuted] = useState(false);
+  const [isMuted, setIsMuted] = useState(true);
 
   useEffect(() => {
     if (videoRef.current) {
@@ -91,7 +91,7 @@ export function VideoCard({
             src={video.video_url}
             className="h-full w-full object-cover"
             loop
-            muted
+            muted={isMuted}
             playsInline
             poster={video.thumbnail_url || undefined}
           />
