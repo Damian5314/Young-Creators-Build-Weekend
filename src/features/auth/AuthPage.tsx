@@ -521,12 +521,16 @@ export default function AuthPage() {
           </Button>
 
           {/* Logo */}
-          <div className="text-center mb-8">
-            <div className="h-20 w-20 mx-auto mb-5 rounded-3xl bg-gradient-primary flex items-center justify-center shadow-glow">
-              <span className="text-4xl">🍕</span>
+          <div className="text-center mb-8 mt-16">
+            <div className="h-56 w-56 mx-auto rounded-3xl overflow-hidden shadow-glow">
+              <img
+                src="/FOODSWIPE_1.png"
+                alt="FoodSwipe Logo"
+                className="h-full w-full object-cover"
+              />
             </div>
-            <h1 className="text-4xl font-display font-bold gradient-text mb-2">FoodSwipe</h1>
-            <p className="text-muted-foreground">Ontdek lekker eten bij jou in de buurt</p>
+            <h1 className="text-4xl font-display font-bold gradient-text -mt-16">FoodSwipe</h1>
+            <p className="text-muted-foreground mt-1">Ontdek lekker eten bij jou in de buurt</p>
           </div>
 
           {/* Toggle */}
