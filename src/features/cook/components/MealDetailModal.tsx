@@ -319,7 +319,7 @@ export function MealDetailModal({
                         >
                           <div
                             className={cn(
-                              "px-3 py-2 rounded-2xl text-sm max-w-[85%] shadow-sm",
+                              "px-3 py-2 rounded-2xl text-sm max-w-[85%] shadow-sm whitespace-pre-line",
                               message.role === "user"
                                 ? "bg-primary text-primary-foreground"
                                 : "bg-secondary text-secondary-foreground"
