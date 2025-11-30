@@ -12,6 +12,7 @@ import { toast } from 'sonner';
 import { useNavigate } from 'react-router-dom';
 import { Input } from '@/components/ui/input';
 import { Search, X } from 'lucide-react';
+import { supabase } from '@/integrations/supabase/client';
 
 const filterLabels: Record<MealTag | 'all', string> = {
   all: 'All',
@@ -42,10 +43,13 @@ export function FoodSwipeFeed() {
   const navigate = useNavigate();
   const [selectedMeal, setSelectedMeal] = useState<Meal | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [saveModal, setSaveModal] = useState<{ open: boolean; mealId: string | null }>({
+  const [saveModal, setSaveModal] = useState<{ open: boolean; recipeId: string | null }>({
     open: false,
-    mealId: null,
+    recipeId: null,
   });
+  const [savingMealId, setSavingMealId] = useState<string | null>(null);
+  // Keep track of meals we've already saved to DB (mealId -> recipeId)
+  const [savedMealIds, setSavedMealIds] = useState<Map<string, string>>(new Map());
 
   const handleMealClick = (meal: Meal) => {
     setSelectedMeal(meal);
@@ -61,13 +65,58 @@ export function FoodSwipeFeed() {
     setFilter(tag);
   };
 
-  const handleSave = (mealId: string) => {
+  const handleSave = async (meal: Meal) => {
     if (!user) {
       toast.error('Please sign in to save');
       navigate('/auth');
       return;
     }
-    setSaveModal({ open: true, mealId });
+
+    // Check if we already saved this meal to DB
+    const existingRecipeId = savedMealIds.get(meal.id);
+    if (existingRecipeId) {
+      setSaveModal({ open: true, recipeId: existingRecipeId });
+      return;
+    }
+
+    // Save meal to database first
+    setSavingMealId(meal.id);
+
+    try {
+      const { data, error } = await supabase
+        .from('recipes')
+        .insert({
+          user_id: user.id,
+          title: meal.name,
+          description: meal.description || '',
+          ingredients: meal.ingredients,
+          steps: meal.steps,
+          image_url: meal.imageUrl,
+          video_url: meal.videoUrl || null,
+          source: 'SAVED', // Mark as saved from feed, not user-created
+        })
+        .select('id')
+        .single();
+
+      if (error) {
+        console.error('Error saving recipe:', error);
+        toast.error('Kon recept niet opslaan');
+        return;
+      }
+
+      if (data) {
+        // Remember this mapping
+        setSavedMealIds(prev => new Map(prev).set(meal.id, data.id));
+        // Open collection modal with the new recipe ID
+        setSaveModal({ open: true, recipeId: data.id });
+        toast.success('Recept opgeslagen!');
+      }
+    } catch (err) {
+      console.error('Error:', err);
+      toast.error('Er ging iets mis');
+    } finally {
+      setSavingMealId(null);
+    }
   };
 
   return (
@@ -145,7 +194,8 @@ export function FoodSwipeFeed() {
                 onToggleFavorite={toggleFavorite}
                 onTagClick={handleTagClick}
                 onClick={() => handleMealClick(meal)}
-                onSave={() => handleSave(meal.id)}
+                onSave={() => handleSave(meal)}
+                isSaving={savingMealId === meal.id}
               />
             </motion.div>
           ))
@@ -159,14 +209,15 @@ export function FoodSwipeFeed() {
         onClose={handleCloseModal}
         isFavorite={selectedMeal ? isFavorite(selectedMeal.id) : false}
         onToggleFavorite={toggleFavorite}
-        onSave={() => selectedMeal && handleSave(selectedMeal.id)}
+        onSave={() => selectedMeal && handleSave(selectedMeal)}
+        isSaving={selectedMeal ? savingMealId === selectedMeal.id : false}
       />
 
       {/* Save to Collection Modal */}
       <SaveToCollectionModal
         isOpen={saveModal.open}
-        onClose={() => setSaveModal({ open: false, mealId: null })}
-        itemId={saveModal.mealId || ''}
+        onClose={() => setSaveModal({ open: false, recipeId: null })}
+        itemId={saveModal.recipeId || ''}
         itemType="RECIPE"
       />
     </div>
