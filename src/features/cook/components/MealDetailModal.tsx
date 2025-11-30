@@ -6,8 +6,6 @@ import {
   Share2,
   Clock,
   ChefHat,
-  ExternalLink,
-  Play,
   Bookmark,
   MessageCircle,
 } from "lucide-react";
@@ -41,15 +39,6 @@ const tagLabels: Record<MealTag, string> = {
   dessert: "Dessert",
   healthy: "Healthy",
 };
-
-function getYouTubeEmbedUrl(url: string): string | null {
-  const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|&v=)([^#&?]*).*/;
-  const match = url.match(regExp);
-  if (match && match[2].length === 11) {
-    return `https://www.youtube.com/embed/${match[2]}`;
-  }
-  return null;
-}
 
 export function MealDetailModal({
   meal,
@@ -177,8 +166,6 @@ export function MealDetailModal({
     }
   };
 
-  const embedUrl = meal.videoUrl ? getYouTubeEmbedUrl(meal.videoUrl) : null;
-
   return (
     <AnimatePresence>
       {isOpen && (
@@ -298,81 +285,13 @@ export function MealDetailModal({
                 </p>
               )}
 
-              {/* Video Section */}
-              {meal.videoUrl && (
-                <div className="space-y-2">
-                  <h3 className="font-semibold text-sm text-primary">
-                    Video Tutorial
-                  </h3>
-                  {embedUrl ? (
-                    <div className="aspect-video rounded-xl overflow-hidden bg-secondary">
-                      <iframe
-                        src={embedUrl}
-                        title={`${meal.name} video`}
-                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                        allowFullScreen
-                        className="w-full h-full"
-                      />
-                    </div>
-                  ) : (
-                    <Button
-                      variant="secondary"
-                      className="w-full"
-                      onClick={() => window.open(meal.videoUrl, "_blank")}
-                    >
-                      <Play className="h-4 w-4 mr-2" />
-                      Watch on YouTube
-                      <ExternalLink className="h-4 w-4 ml-2" />
-                    </Button>
-                  )}
-                </div>
-              )}
-
-              {/* Ingredients */}
-              <div className="bg-secondary/50 rounded-xl p-4">
-                <h3 className="font-semibold text-sm text-primary mb-3">
-                  Ingredients
-                </h3>
-                <ul className="space-y-2">
-                  {meal.ingredients.map((ingredient: string, index: number) => (
-                    <li
-                      key={index}
-                      className="text-sm text-foreground flex items-start gap-2"
-                    >
-                      <span className="text-primary mt-0.5">•</span>
-                      {ingredient}
-                    </li>
-                  ))}
-                </ul>
-              </div>
-
-              {/* Steps */}
-              <div>
-                <h3 className="font-semibold text-sm text-primary mb-3">
-                  Instructions
-                </h3>
-                <ol className="space-y-3">
-                  {meal.steps.map((step: string, index: number) => (
-                    <li
-                      key={index}
-                      className="text-sm text-foreground flex items-start gap-3"
-                    >
-                      <span className="h-6 w-6 rounded-full bg-primary text-primary-foreground flex items-center justify-center text-xs font-bold flex-shrink-0">
-                        {index + 1}
-                      </span>
-                      <span className="pt-0.5">{step}</span>
-                    </li>
-                  ))}
-                </ol>
-              </div>
-
               {/* Chat Assistant */}
               <div className="bg-secondary/40 rounded-xl p-4 space-y-3 border border-secondary/40">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
                     <MessageCircle className="h-4 w-4 text-primary" />
                     <h3 className="font-semibold text-sm text-primary">
-                      Ask the Chef
+                      Ask Your AI Chef
                     </h3>
                   </div>
                   <Button
@@ -434,6 +353,44 @@ export function MealDetailModal({
                     </form>
                   </div>
                 )}
+              </div>
+
+              {/* Ingredients */}
+              <div className="bg-secondary/50 rounded-xl p-4">
+                <h3 className="font-semibold text-sm text-primary mb-3">
+                  Ingredients
+                </h3>
+                <ul className="space-y-2">
+                  {meal.ingredients.map((ingredient: string, index: number) => (
+                    <li
+                      key={index}
+                      className="text-sm text-foreground flex items-start gap-2"
+                    >
+                      <span className="text-primary mt-0.5">•</span>
+                      {ingredient}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+
+              {/* Steps */}
+              <div>
+                <h3 className="font-semibold text-sm text-primary mb-3">
+                  Instructions
+                </h3>
+                <ol className="space-y-3">
+                  {meal.steps.map((step: string, index: number) => (
+                    <li
+                      key={index}
+                      className="text-sm text-foreground flex items-start gap-3"
+                    >
+                      <span className="h-6 w-6 rounded-full bg-primary text-primary-foreground flex items-center justify-center text-xs font-bold flex-shrink-0">
+                        {index + 1}
+                      </span>
+                      <span className="pt-0.5">{step}</span>
+                    </li>
+                  ))}
+                </ol>
               </div>
             </div>
           </motion.div>
