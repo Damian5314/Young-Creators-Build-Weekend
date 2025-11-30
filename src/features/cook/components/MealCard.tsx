@@ -85,7 +85,7 @@ export function MealCard({ meal, isFavorite, onToggleFavorite, onTagClick, onCli
 
       {/* Duration Badge */}
       {meal.durationMinutes && (
-        <div className="absolute top-3 left-3 flex items-center gap-1 bg-black/60 backdrop-blur-sm px-2.5 py-1 rounded-full">
+        <div className="absolute top-3 left-3 flex items-center gap-1 bg-neutral-800 px-2.5 py-1 rounded-full">
           <Clock className="h-3.5 w-3.5 text-white" />
           <span className="text-xs font-medium text-white">{meal.durationMinutes} min</span>
         </div>
@@ -93,7 +93,7 @@ export function MealCard({ meal, isFavorite, onToggleFavorite, onTagClick, onCli
 
       {/* Difficulty Badge */}
       {meal.difficulty && (
-        <div className="absolute top-3 right-14 flex items-center gap-1 bg-black/60 backdrop-blur-sm px-2.5 py-1 rounded-full">
+        <div className="absolute top-3 right-14 flex items-center gap-1 bg-neutral-800 px-2.5 py-1 rounded-full">
           <ChefHat className="h-3.5 w-3.5 text-white" />
           <span className="text-xs font-medium text-white capitalize">{meal.difficulty}</span>
         </div>
@@ -114,7 +114,7 @@ export function MealCard({ meal, isFavorite, onToggleFavorite, onTagClick, onCli
               <button
                 key={tag}
                 onClick={(e) => handleTagClick(e, tag)}
-                className="text-xs bg-white/20 backdrop-blur-sm hover:bg-white/30 text-white px-2.5 py-1 rounded-full transition-colors"
+                className="text-xs bg-neutral-800 hover:bg-neutral-700 text-white px-2.5 py-1 rounded-full transition-colors"
               >
                 {tagLabels[tag]}
               </button>
@@ -130,7 +130,7 @@ export function MealCard({ meal, isFavorite, onToggleFavorite, onTagClick, onCli
                 "h-10 w-10 rounded-full flex items-center justify-center transition-all",
                 isFavorite
                   ? "bg-red-500 text-white"
-                  : "bg-white/20 backdrop-blur-sm text-white hover:bg-white/30"
+                  : "bg-neutral-800 text-white hover:bg-neutral-700"
               )}
             >
               <Heart className={cn("h-5 w-5", isFavorite && "fill-current")} />
@@ -148,7 +148,7 @@ export function MealCard({ meal, isFavorite, onToggleFavorite, onTagClick, onCli
             <button
               onClick={handleShare}
               aria-label="Share recipe"
-              className="h-10 w-10 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center text-white hover:bg-white/30 transition-all"
+              className="h-10 w-10 rounded-full bg-neutral-800 flex items-center justify-center text-white hover:bg-neutral-700 transition-all"
             >
               <Share2 className="h-5 w-5" />
             </button>

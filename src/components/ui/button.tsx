@@ -16,7 +16,7 @@ const buttonVariants = cva(
         ghost: "hover:bg-accent hover:text-accent-foreground",
         link: "text-primary underline-offset-4 hover:underline",
         glass: "glass-card hover:bg-secondary/60 text-foreground",
-        action: "rounded-full bg-secondary/80 backdrop-blur-md hover:bg-secondary text-foreground shadow-card",
+        action: "rounded-full bg-neutral-800 hover:bg-neutral-700 text-white",
         like: "rounded-full bg-primary text-primary-foreground hover:bg-primary/90 shadow-glow",
         save: "rounded-full bg-gold text-primary-foreground hover:bg-gold/90",
         order: "bg-food-green text-primary-foreground hover:bg-food-green/90 font-bold",

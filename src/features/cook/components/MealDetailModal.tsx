@@ -99,7 +99,7 @@ export function MealDetailModal({
             <button
               onClick={onClose}
               aria-label="Close modal"
-              className="absolute top-3 right-3 z-10 h-10 w-10 rounded-full bg-black/50 backdrop-blur-sm flex items-center justify-center text-white hover:bg-black/70 transition-colors"
+              className="absolute top-3 right-3 z-10 h-10 w-10 rounded-full bg-neutral-800 flex items-center justify-center text-white hover:bg-neutral-700 transition-colors"
             >
               <X className="h-5 w-5" />
             </button>
@@ -116,13 +116,13 @@ export function MealDetailModal({
               {/* Badges */}
               <div className="absolute top-3 left-3 flex gap-2">
                 {meal.durationMinutes && (
-                  <div className="flex items-center gap-1 bg-black/60 backdrop-blur-sm px-2.5 py-1 rounded-full">
+                  <div className="flex items-center gap-1 bg-neutral-800 px-2.5 py-1 rounded-full">
                     <Clock className="h-3.5 w-3.5 text-white" />
                     <span className="text-xs font-medium text-white">{meal.durationMinutes} min</span>
                   </div>
                 )}
                 {meal.difficulty && (
-                  <div className="flex items-center gap-1 bg-black/60 backdrop-blur-sm px-2.5 py-1 rounded-full">
+                  <div className="flex items-center gap-1 bg-neutral-800 px-2.5 py-1 rounded-full">
                     <ChefHat className="h-3.5 w-3.5 text-white" />
                     <span className="text-xs font-medium text-white capitalize">{meal.difficulty}</span>
                   </div>

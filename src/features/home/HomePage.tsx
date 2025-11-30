@@ -7,21 +7,25 @@ import { AppLayout } from '@/shared/components';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/shared/hooks';
-import { VideoWithRestaurant } from '@/shared/types';
+import { VideoWithRestaurant, Recipe } from '@/shared/types';
 
-import { VideoCard, SaveToCollectionModal, ActionModal, ShareModal } from './components';
+import { VideoCard, RecipeCard, SaveToCollectionModal, ActionModal, ShareModal } from './components';
 
 export default function HomePage() {
   const { user, profile, loading: authLoading } = useAuth();
   const navigate = useNavigate();
 
   const [videos, setVideos] = useState<VideoWithRestaurant[]>([]);
+  const [recipes, setRecipes] = useState<Recipe[]>([]);
   const [loading, setLoading] = useState(true);
   const [activeIndex, setActiveIndex] = useState(0);
+  const [activeRecipeIndex, setActiveRecipeIndex] = useState(0);
   const [likedVideos, setLikedVideos] = useState<Set<string>>(new Set());
+  const [likedRecipes, setLikedRecipes] = useState<Set<string>>(new Set());
   const [activeTab, setActiveTab] = useState<'restaurants' | 'recipes'>('restaurants');
 
   const containerRef = useRef<HTMLDivElement>(null);
+  const recipeContainerRef = useRef<HTMLDivElement>(null);
 
   const [saveModal, setSaveModal] = useState<{ open: boolean; videoId: string | null }>({
     open: false,
@@ -55,8 +59,10 @@ export default function HomePage() {
     }
 
     fetchVideos();
+    fetchRecipes();
     if (user) {
       fetchLikedVideos();
+      fetchLikedRecipes();
     }
   }, [user, profile, authLoading]);
 
@@ -83,6 +89,35 @@ export default function HomePage() {
 
     if (data) {
       setLikedVideos(new Set(data.map((l) => l.video_id)));
+    }
+  };
+
+  const fetchRecipes = async () => {
+    const { data, error } = await supabase
+      .from('recipes')
+      .select('*')
+      .not('video_url', 'is', null)
+      .order('like_count', { ascending: false })
+      .limit(20);
+
+    if (!error && data) {
+      setRecipes(data as Recipe[]);
+    }
+    setLoading(false);
+  };
+
+  const fetchLikedRecipes = async () => {
+    if (!user) return;
+
+    // For now, we'll use collection items to track liked recipes
+    // You might want to create a separate user_recipe_likes table later
+    const { data } = await supabase
+      .from('collection_items')
+      .select('item_id')
+      .eq('item_type', 'RECIPE');
+
+    if (data) {
+      setLikedRecipes(new Set(data.map((l) => l.item_id)));
     }
   };
 
@@ -136,6 +171,105 @@ export default function HomePage() {
           stat_type: 'view',
         });
       }
+    }
+  };
+
+  const handleRecipeScroll = () => {
+    if (!recipeContainerRef.current) return;
+
+    const scrollTop = recipeContainerRef.current.scrollTop;
+    const cardHeight = window.innerHeight;
+    const newIndex = Math.round(scrollTop / cardHeight);
+
+    if (newIndex !== activeRecipeIndex) {
+      setActiveRecipeIndex(newIndex);
+
+      const recipe = recipes[newIndex];
+      if (recipe) {
+        // Increment recipe view count
+        supabase
+          .from('recipes')
+          .update({ view_count: recipe.view_count + 1 } as any)
+          .eq('id', recipe.id)
+          .then(() => {});
+      }
+    }
+  };
+
+  const handleLikeRecipe = async (recipeId: string) => {
+    if (!user) {
+      toast.error('Please sign in to like recipes');
+      navigate('/auth');
+      return;
+    }
+
+    const isLiked = likedRecipes.has(recipeId);
+    const recipe = recipes.find((r) => r.id === recipeId);
+    if (!recipe) return;
+
+    if (isLiked) {
+      // Unlike: remove from collection
+      const { data: collectionItem } = await supabase
+        .from('collection_items')
+        .select('id')
+        .eq('item_id', recipeId)
+        .eq('item_type', 'RECIPE')
+        .single();
+
+      if (collectionItem) {
+        await supabase.from('collection_items').delete().eq('id', collectionItem.id);
+      }
+
+      await supabase
+        .from('recipes')
+        .update({ like_count: Math.max(0, recipe.like_count - 1) } as any)
+        .eq('id', recipeId);
+
+      setLikedRecipes((prev) => {
+        const next = new Set(prev);
+        next.delete(recipeId);
+        return next;
+      });
+
+      setRecipes((prev) =>
+        prev.map((r) => (r.id === recipeId ? { ...r, like_count: Math.max(0, r.like_count - 1) } : r))
+      );
+    } else {
+      // Like: add to favorites collection
+      const { data: favCollection } = await supabase
+        .from('collections')
+        .select('id')
+        .eq('user_id', user.id)
+        .eq('name', 'Favorites')
+        .eq('type', 'RECIPE')
+        .single();
+
+      let collectionId = favCollection?.id;
+
+      if (!collectionId) {
+        const { data: newCollection } = await supabase
+          .from('collections')
+          .insert({ user_id: user.id, name: 'Favorites', type: 'RECIPE' })
+          .select('id')
+          .single();
+        collectionId = newCollection?.id;
+      }
+
+      if (collectionId) {
+        await supabase
+          .from('collection_items')
+          .insert({ collection_id: collectionId, item_id: recipeId, item_type: 'RECIPE' });
+      }
+
+      await supabase
+        .from('recipes')
+        .update({ like_count: recipe.like_count + 1 } as any)
+        .eq('id', recipeId);
+
+      setLikedRecipes((prev) => new Set([...prev, recipeId]));
+      setRecipes((prev) =>
+        prev.map((r) => (r.id === recipeId ? { ...r, like_count: r.like_count + 1 } : r))
+      );
     }
   };
 
@@ -236,15 +370,49 @@ export default function HomePage() {
           )}
         </TabsContent>
 
-        {/* Recipes Tab - placeholder */}
+        {/* Recipes Tab */}
         <TabsContent value="recipes" className="flex-1 mt-0">
-          <div className="empty-state h-screen">
-            <div className="empty-state-icon">
-              <ChefHat className="h-16 w-16 text-muted-foreground" />
+          {recipes.length === 0 ? (
+            <div className="empty-state h-screen">
+              <div className="empty-state-icon">
+                <ChefHat className="h-16 w-16 text-muted-foreground" />
+              </div>
+              <h1 className="empty-state-title">Geen recepten gevonden</h1>
+              <p className="empty-state-description">Probeer de AI Chef op de Cook pagina!</p>
             </div>
-            <h1 className="empty-state-title">Recepten komen binnenkort</h1>
-            <p className="empty-state-description">Probeer de AI Chef op de Cook pagina!</p>
-          </div>
+          ) : (
+            <div
+              ref={recipeContainerRef}
+              className="h-screen overflow-y-scroll snap-y snap-mandatory no-scrollbar overscroll-none"
+              onScroll={handleRecipeScroll}
+            >
+              {recipes.map((recipe, index) => (
+                <RecipeCard
+                  key={recipe.id}
+                  recipe={recipe}
+                  isActive={index === activeRecipeIndex && activeTab === 'recipes'}
+                  isLiked={likedRecipes.has(recipe.id)}
+                  onLike={() => handleLikeRecipe(recipe.id)}
+                  onSave={() => {
+                    if (!user) {
+                      toast.error('Please sign in to save');
+                      navigate('/auth');
+                      return;
+                    }
+                    setSaveModal({ open: true, videoId: recipe.id });
+                  }}
+                  onShare={() =>
+                    setShareModal({
+                      open: true,
+                      itemId: recipe.id,
+                      itemType: 'RECIPE',
+                      itemName: recipe.title,
+                    })
+                  }
+                />
+              ))}
+            </div>
+          )}
         </TabsContent>
       </Tabs>
 
