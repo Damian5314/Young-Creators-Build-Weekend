@@ -8,3 +8,4 @@ export { MapPage } from './map';
 export { OnboardingPage } from './onboarding';
 export { RestaurantDetailPage } from './restaurant';
 export { DashboardPage } from './dashboard';
+export { UploadPage } from './upload';

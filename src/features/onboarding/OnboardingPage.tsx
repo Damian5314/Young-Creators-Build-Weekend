@@ -28,12 +28,15 @@ const CITIES = [
 
 export default function Onboarding() {
   const navigate = useNavigate();
-  const { user, loading: authLoading, refreshProfile } = useAuth();
+  const { user, profile, loading: authLoading, refreshProfile } = useAuth();
   const [step, setStep] = useState(1);
   const [city, setCity] = useState('');
   const [customCity, setCustomCity] = useState('');
   const [preferences, setPreferences] = useState<string[]>([]);
   const [loading, setLoading] = useState(false);
+  const [checkingRole, setCheckingRole] = useState(true);
+
+  const isOwner = profile?.role === 'OWNER';
 
   // Redirect to auth if not logged in
   useEffect(() => {
@@ -42,9 +45,54 @@ export default function Onboarding() {
     }
   }, [user, authLoading, navigate]);
 
+  // For restaurant owners, skip onboarding entirely since they already provided location
+  useEffect(() => {
+    const checkAndRedirect = async () => {
+      if (!authLoading && user) {
+        // If profile is loaded and user is owner, skip onboarding
+        if (profile) {
+          if (profile.role === 'OWNER') {
+            await completeOnboardingForOwner();
+          }
+          setCheckingRole(false);
+        }
+      }
+    };
+
+    checkAndRedirect();
+  }, [user, authLoading, profile]);
+
+  const completeOnboardingForOwner = async () => {
+    if (!user) return;
+
+    setLoading(true);
+    try {
+      const { error } = await supabase
+        .from('profiles')
+        .update({
+          onboarding_completed: true,
+          updated_at: new Date().toISOString(),
+        })
+        .eq('id', user.id);
+
+      if (error) {
+        console.error('Onboarding error:', error);
+        toast.error('Er ging iets mis');
+      } else {
+        await refreshProfile();
+        toast.success('Welkom bij FoodSwipe!');
+        navigate('/');
+      }
+    } catch (err) {
+      console.error('Onboarding exception:', err);
+      toast.error('Er ging iets mis. Probeer opnieuw.');
+    }
+    setLoading(false);
+  };
+
   const togglePreference = (pref: string) => {
-    setPreferences(prev => 
-      prev.includes(pref) 
+    setPreferences(prev =>
+      prev.includes(pref)
         ? prev.filter(p => p !== pref)
         : [...prev, pref]
     );
@@ -52,7 +100,7 @@ export default function Onboarding() {
 
   const handleComplete = async () => {
     if (!user) {
-      toast.error('Please sign in first');
+      toast.error('Log eerst in');
       navigate('/auth');
       return;
     }
@@ -74,22 +122,22 @@ export default function Onboarding() {
 
       if (error) {
         console.error('Onboarding error:', error);
-        toast.error('Failed to save preferences: ' + error.message);
+        toast.error('Voorkeuren opslaan mislukt: ' + error.message);
       } else {
         await refreshProfile();
-        toast.success('Welcome to FoodSwipe!');
+        toast.success('Welkom bij FoodSwipe!');
         navigate('/');
       }
     } catch (err) {
       console.error('Onboarding exception:', err);
-      toast.error('Something went wrong. Please try again.');
+      toast.error('Er ging iets mis. Probeer opnieuw.');
     }
 
     setLoading(false);
   };
 
-  // Show loading while auth is loading
-  if (authLoading) {
+  // Show loading while auth is loading or checking role
+  if (authLoading || checkingRole) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
         <Loader2 className="h-8 w-8 animate-spin text-primary" />
@@ -101,7 +149,7 @@ export default function Onboarding() {
     <div className="min-h-screen bg-background flex flex-col">
       {/* Progress bar */}
       <div className="h-1 bg-secondary">
-        <motion.div 
+        <motion.div
           className="h-full bg-primary"
           initial={{ width: '0%' }}
           animate={{ width: step === 1 ? '50%' : '100%' }}
@@ -123,12 +171,12 @@ export default function Onboarding() {
                 <div className="h-16 w-16 mx-auto mb-6 rounded-2xl bg-primary/10 flex items-center justify-center">
                   <MapPin className="h-8 w-8 text-primary" />
                 </div>
-                
+
                 <h1 className="text-2xl font-display font-bold mb-2">
-                  Where are you located?
+                  Waar woon je?
                 </h1>
                 <p className="text-muted-foreground mb-8">
-                  We'll show you the best food spots nearby
+                  We tonen je de beste eetplekken in de buurt
                 </p>
 
                 <div className="grid grid-cols-2 gap-3 mb-6">
@@ -137,32 +185,32 @@ export default function Onboarding() {
                       key={c}
                       onClick={() => setCity(c)}
                       className={`p-4 rounded-xl border-2 text-left transition-all ${
-                        city === c 
-                          ? 'border-primary bg-primary/10' 
+                        city === c
+                          ? 'border-primary bg-primary/10'
                           : 'border-secondary bg-secondary/50 hover:border-primary/50'
                       }`}
                     >
-                      <span className="font-semibold">{c}</span>
+                      <span className="font-semibold">{c === 'Other' ? 'Anders' : c}</span>
                     </button>
                   ))}
                 </div>
 
                 {city === 'Other' && (
                   <Input
-                    placeholder="Enter your city..."
+                    placeholder="Voer je stad in..."
                     value={customCity}
                     onChange={(e) => setCustomCity(e.target.value)}
                     className="mb-6"
                   />
                 )}
 
-                <Button 
+                <Button
                   onClick={() => setStep(2)}
                   disabled={!city || (city === 'Other' && !customCity)}
                   className="w-full"
                   size="lg"
                 >
-                  Continue
+                  Volgende
                   <ArrowRight className="h-5 w-5 ml-2" />
                 </Button>
               </motion.div>
@@ -179,12 +227,12 @@ export default function Onboarding() {
                 <div className="h-16 w-16 mx-auto mb-6 rounded-2xl bg-primary/10 flex items-center justify-center">
                   <span className="text-3xl">🍽️</span>
                 </div>
-                
+
                 <h1 className="text-2xl font-display font-bold mb-2">
-                  Any dietary preferences?
+                  Dieetvoorkeuren?
                 </h1>
                 <p className="text-muted-foreground mb-8">
-                  Select all that apply (optional)
+                  Selecteer wat van toepassing is (optioneel)
                 </p>
 
                 <div className="grid grid-cols-2 gap-3 mb-8">
@@ -194,7 +242,7 @@ export default function Onboarding() {
                       onClick={() => togglePreference(option.id)}
                       className={`p-4 rounded-xl border-2 text-left transition-all flex items-center gap-3 ${
                         preferences.includes(option.id)
-                          ? 'border-primary bg-primary/10' 
+                          ? 'border-primary bg-primary/10'
                           : 'border-secondary bg-secondary/50 hover:border-primary/50'
                       }`}
                     >
@@ -208,15 +256,15 @@ export default function Onboarding() {
                 </div>
 
                 <div className="flex gap-3">
-                  <Button 
+                  <Button
                     variant="secondary"
                     onClick={() => setStep(1)}
                     className="flex-1"
                     size="lg"
                   >
-                    Back
+                    Terug
                   </Button>
-                  <Button 
+                  <Button
                     onClick={handleComplete}
                     disabled={loading}
                     className="flex-1"
@@ -226,7 +274,7 @@ export default function Onboarding() {
                       <Loader2 className="h-5 w-5 animate-spin" />
                     ) : (
                       <>
-                        Start Exploring
+                        Start Ontdekken
                         <ArrowRight className="h-5 w-5 ml-2" />
                       </>
                     )}

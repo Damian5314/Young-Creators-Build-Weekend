@@ -21,6 +21,7 @@ export const ROUTES = {
   ONBOARDING: '/onboarding',
   MAP: '/map',
   COOK: '/cook',
+  UPLOAD: '/upload',
   COLLECTIONS: '/collections',
   PROFILE: '/profile',
   RESTAURANT: '/restaurant',

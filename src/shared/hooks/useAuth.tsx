@@ -3,12 +3,20 @@ import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
 import { Profile } from '@/shared/types';
 
+interface RestaurantData {
+  name: string;
+  kvkNumber: string;
+  address: string;
+  city: string;
+  cuisineTypes: string[];
+}
+
 interface AuthContextType {
   user: User | null;
   session: Session | null;
   profile: Profile | null;
   loading: boolean;
-  signUp: (email: string, password: string, name?: string) => Promise<{ error: Error | null }>;
+  signUp: (email: string, password: string, name?: string, role?: 'USER' | 'OWNER', restaurantData?: RestaurantData) => Promise<{ error: Error | null }>;
   signIn: (email: string, password: string) => Promise<{ error: Error | null }>;
   signOut: () => Promise<void>;
   refreshProfile: () => Promise<void>;
@@ -64,12 +72,21 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return () => subscription.unsubscribe();
   }, []);
 
-  const signUp = async (email: string, password: string, name?: string) => {
+  const signUp = async (
+    email: string,
+    password: string,
+    name?: string,
+    role: 'USER' | 'OWNER' = 'USER',
+    restaurantData?: RestaurantData
+  ) => {
     const { data, error } = await supabase.auth.signUp({
       email,
       password,
       options: {
-        data: { name: name || email.split('@')[0] }
+        data: {
+          name: name || email.split('@')[0],
+          role: role
+        }
       }
     });
 
@@ -77,8 +94,57 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     if (!error && data.user && data.session) {
       setUser(data.user);
       setSession(data.session);
+
       // Wait a bit for the trigger to create the profile
       await new Promise(resolve => setTimeout(resolve, 500));
+
+      // Update profile with role, KVK number, and city (for restaurant owners)
+      await supabase
+        .from('profiles')
+        .update({
+          role: role,
+          ...(restaurantData?.kvkNumber && { kvk_number: restaurantData.kvkNumber }),
+          ...(restaurantData?.city && { city: restaurantData.city })
+        })
+        .eq('id', data.user.id);
+
+      // If restaurant owner, create the restaurant
+      if (role === 'OWNER' && restaurantData) {
+        // Get coordinates for the city (simplified - using Amsterdam as default for Dutch cities)
+        const cityCoordinates: Record<string, { lat: number; lng: number }> = {
+          'amsterdam': { lat: 52.3676, lng: 4.9041 },
+          'rotterdam': { lat: 51.9244, lng: 4.4777 },
+          'den haag': { lat: 52.0705, lng: 4.3007 },
+          'utrecht': { lat: 52.0907, lng: 5.1214 },
+          'eindhoven': { lat: 51.4416, lng: 5.4697 },
+          'tilburg': { lat: 51.5555, lng: 5.0913 },
+          'groningen': { lat: 53.2194, lng: 6.5665 },
+          'almere': { lat: 52.3508, lng: 5.2647 },
+          'breda': { lat: 51.5719, lng: 4.7683 },
+          'nijmegen': { lat: 51.8426, lng: 5.8546 },
+        };
+
+        const cityLower = restaurantData.city.toLowerCase();
+        const coords = cityCoordinates[cityLower] || { lat: 52.3676, lng: 4.9041 }; // Default to Amsterdam
+
+        const { error: restaurantError } = await supabase
+          .from('restaurants')
+          .insert({
+            name: restaurantData.name,
+            address: restaurantData.address,
+            city: restaurantData.city,
+            cuisine_types: restaurantData.cuisineTypes,
+            latitude: coords.lat,
+            longitude: coords.lng,
+            owner_id: data.user.id,
+            description: `Welkom bij ${restaurantData.name}!`,
+          });
+
+        if (restaurantError) {
+          console.error('Error creating restaurant:', restaurantError);
+        }
+      }
+
       await fetchProfile(data.user.id);
     }
 
@@ -96,6 +162,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const signOut = async () => {
     await supabase.auth.signOut();
+    setUser(null);
+    setSession(null);
+    setProfile(null);
   };
 
   const refreshProfile = async () => {
