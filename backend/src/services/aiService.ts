@@ -11,6 +11,60 @@ export interface AIRecipeResponse {
 
 export async function generateRecipesWithAI(ingredients: string): Promise<AIRecipeResponse[]> {
   const apiKey = env.LOVABLE_API_KEY || env.OPENAI_API_KEY;
+  const n8nUrl = env.N8N_WEBHOOK_URL || process.env.N8N_WEBHOOK_URL;
+
+  // Fallback to n8n webhook if no direct AI key is configured
+  if (!apiKey && n8nUrl) {
+    const response = await fetch(n8nUrl, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ ingredients, mode: 'ingredients' }),
+    });
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error('n8n generate webhook error:', response.status, errorText);
+      throw new AppError('Failed to generate recipes via webhook', 500);
+    }
+
+    const data = await response.json() as any;
+    const cleanJsonString = (str: string) => str.replace(/```json\n?|\n?```/g, '').trim();
+
+    let recipesData: any = data;
+
+    if (typeof data === 'string') {
+      try {
+        recipesData = JSON.parse(cleanJsonString(data));
+      } catch (e) {
+        console.error('Failed to parse string response from n8n:', e);
+      }
+    } else if (data?.content && typeof data.content === 'string') {
+      try {
+        recipesData = JSON.parse(cleanJsonString(data.content));
+      } catch (e) {
+        console.error('Failed to parse content string from n8n:', e);
+      }
+    } else if (Array.isArray(data) && data[0]?.content?.[0]?.text) {
+      try {
+        const rawText = data[0].content[0].text;
+        recipesData = JSON.parse(cleanJsonString(rawText));
+      } catch (e) {
+        console.error('Failed to parse raw OpenAI output from n8n:', e);
+      }
+    }
+
+    const recipesArray = Array.isArray(recipesData)
+      ? recipesData
+      : recipesData?.recipes || [];
+
+    if (!Array.isArray(recipesArray) || recipesArray.length === 0) {
+      throw new AppError('No recipes returned from webhook', 500);
+    }
+
+    return recipesArray;
+  }
 
   if (!apiKey) {
     throw new AppError('AI API key not configured', 500);
