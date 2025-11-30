@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Heart, Bookmark, MapPin, Clock, ChevronRight, ShoppingBag, CalendarCheck, Share2 } from 'lucide-react';
+import { Heart, Bookmark, MapPin, Clock, ChevronRight, ShoppingBag, CalendarCheck, Share2, Volume2, VolumeX } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { VideoWithRestaurant } from '@/shared/types';
 import { cn } from '@/shared/utils';
@@ -30,6 +30,7 @@ export function VideoCard({
   const navigate = useNavigate();
   const videoRef = useRef<HTMLVideoElement>(null);
   const [showHeart, setShowHeart] = useState(false);
+  const [isMuted, setIsMuted] = useState(false);
 
   useEffect(() => {
     if (videoRef.current) {
@@ -40,6 +41,18 @@ export function VideoCard({
       }
     }
   }, [isActive]);
+
+  // Set video to use device volume (volume = 1, not muted)
+  useEffect(() => {
+    if (videoRef.current) {
+      videoRef.current.volume = 1;
+      videoRef.current.muted = isMuted;
+    }
+  }, [isMuted]);
+
+  const toggleMute = () => {
+    setIsMuted(!isMuted);
+  };
 
   const handleDoubleTap = () => {
     if (!isLiked) {
@@ -149,6 +162,18 @@ export function VideoCard({
           transition={{ delay: 0.2 }}
           className="space-y-3"
         >
+          {/* Mute/unmute button - above restaurant name */}
+          <div className="relative flex items-center gap-3 mb-2">
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={toggleMute}
+              className="h-10 w-10 rounded-full bg-neutral-800/80 hover:bg-neutral-700 text-white backdrop-blur-sm"
+            >
+              {isMuted ? <VolumeX className="h-5 w-5" /> : <Volume2 className="h-5 w-5" />}
+            </Button>
+          </div>
+
           {/* Restaurant name with halal badge */}
           <button
             onClick={() => navigate(`/restaurant/${video.restaurant.id}`)}
