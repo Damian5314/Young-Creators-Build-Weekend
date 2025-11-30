@@ -6,8 +6,6 @@ import {
   Share2,
   Clock,
   ChefHat,
-  ExternalLink,
-  Play,
   Bookmark,
   MessageCircle,
 } from "lucide-react";
@@ -41,15 +39,6 @@ const tagLabels: Record<MealTag, string> = {
   dessert: "Dessert",
   healthy: "Healthy",
 };
-
-function getYouTubeEmbedUrl(url: string): string | null {
-  const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|&v=)([^#&?]*).*/;
-  const match = url.match(regExp);
-  if (match && match[2].length === 11) {
-    return `https://www.youtube.com/embed/${match[2]}`;
-  }
-  return null;
-}
 
 export function MealDetailModal({
   meal,
@@ -177,8 +166,6 @@ export function MealDetailModal({
     }
   };
 
-  const embedUrl = meal.videoUrl ? getYouTubeEmbedUrl(meal.videoUrl) : null;
-
   return (
     <AnimatePresence>
       {isOpen && (
@@ -298,35 +285,75 @@ export function MealDetailModal({
                 </p>
               )}
 
-              {/* Video Section */}
-              {meal.videoUrl && (
-                <div className="space-y-2">
-                  <h3 className="font-semibold text-sm text-primary">
-                    Video Tutorial
-                  </h3>
-                  {embedUrl ? (
-                    <div className="aspect-video rounded-xl overflow-hidden bg-secondary">
-                      <iframe
-                        src={embedUrl}
-                        title={`${meal.name} video`}
-                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                        allowFullScreen
-                        className="w-full h-full"
-                      />
-                    </div>
-                  ) : (
-                    <Button
-                      variant="secondary"
-                      className="w-full"
-                      onClick={() => window.open(meal.videoUrl, "_blank")}
-                    >
-                      <Play className="h-4 w-4 mr-2" />
-                      Watch on YouTube
-                      <ExternalLink className="h-4 w-4 ml-2" />
-                    </Button>
-                  )}
+              {/* Chat Assistant */}
+              <div className="bg-secondary/40 rounded-xl p-4 space-y-3 border border-secondary/40">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <MessageCircle className="h-4 w-4 text-primary" />
+                    <h3 className="font-semibold text-sm text-primary">
+                      Ask Your AI Chef
+                    </h3>
+                  </div>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="gap-1 h-8"
+                    onClick={() => setIsChatOpen((prev) => !prev)}
+                  >
+                    {isChatOpen ? "Hide" : "Open"} chat
+                  </Button>
                 </div>
-              )}
+
+                {isChatOpen && (
+                  <div className="space-y-3">
+                    <div className="bg-background/60 rounded-xl p-3 h-60 overflow-y-auto space-y-2">
+                      {chatMessages.map((message) => (
+                        <div
+                          key={message.id}
+                          className={cn(
+                            "flex",
+                            message.role === "user"
+                              ? "justify-end"
+                              : "justify-start"
+                          )}
+                        >
+                          <div
+                            className={cn(
+                              "px-3 py-2 rounded-2xl text-sm max-w-[85%] shadow-sm whitespace-pre-line",
+                              message.role === "user"
+                                ? "bg-primary text-primary-foreground"
+                                : "bg-secondary text-secondary-foreground"
+                            )}
+                          >
+                            {message.content}
+                          </div>
+                        </div>
+                      ))}
+                      {chatLoading && (
+                        <p className="text-xs text-muted-foreground">
+                          Chef is thinking...
+                        </p>
+                      )}
+                    </div>
+
+                    <form onSubmit={handleSendMessage} className="flex gap-2">
+                      <Input
+                        value={chatInput}
+                        onChange={(e) => setChatInput(e.target.value)}
+                        placeholder={`Ask about ${meal.name}...`}
+                        className="flex-1"
+                        disabled={chatLoading}
+                      />
+                      <Button
+                        type="submit"
+                        disabled={chatLoading || !chatInput.trim()}
+                      >
+                        {chatLoading ? "..." : "Send"}
+                      </Button>
+                    </form>
+                  </div>
+                )}
+              </div>
 
               {/* Ingredients */}
               <div className="bg-secondary/50 rounded-xl p-4">
@@ -364,76 +391,6 @@ export function MealDetailModal({
                     </li>
                   ))}
                 </ol>
-              </div>
-
-              {/* Chat Assistant */}
-              <div className="bg-secondary/40 rounded-xl p-4 space-y-3 border border-secondary/40">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <MessageCircle className="h-4 w-4 text-primary" />
-                    <h3 className="font-semibold text-sm text-primary">
-                      Ask the Chef
-                    </h3>
-                  </div>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    className="gap-1 h-8"
-                    onClick={() => setIsChatOpen((prev) => !prev)}
-                  >
-                    {isChatOpen ? "Hide" : "Open"} chat
-                  </Button>
-                </div>
-
-                {isChatOpen && (
-                  <div className="space-y-3">
-                    <div className="bg-background/60 rounded-xl p-3 h-60 overflow-y-auto space-y-2">
-                      {chatMessages.map((message) => (
-                        <div
-                          key={message.id}
-                          className={cn(
-                            "flex",
-                            message.role === "user"
-                              ? "justify-end"
-                              : "justify-start"
-                          )}
-                        >
-                          <div
-                            className={cn(
-                              "px-3 py-2 rounded-2xl text-sm max-w-[85%] shadow-sm",
-                              message.role === "user"
-                                ? "bg-primary text-primary-foreground"
-                                : "bg-secondary text-secondary-foreground"
-                            )}
-                          >
-                            {message.content}
-                          </div>
-                        </div>
-                      ))}
-                      {chatLoading && (
-                        <p className="text-xs text-muted-foreground">
-                          Chef is thinking...
-                        </p>
-                      )}
-                    </div>
-
-                    <form onSubmit={handleSendMessage} className="flex gap-2">
-                      <Input
-                        value={chatInput}
-                        onChange={(e) => setChatInput(e.target.value)}
-                        placeholder={`Ask about ${meal.name}...`}
-                        className="flex-1"
-                        disabled={chatLoading}
-                      />
-                      <Button
-                        type="submit"
-                        disabled={chatLoading || !chatInput.trim()}
-                      >
-                        {chatLoading ? "..." : "Send"}
-                      </Button>
-                    </form>
-                  </div>
-                )}
               </div>
             </div>
           </motion.div>

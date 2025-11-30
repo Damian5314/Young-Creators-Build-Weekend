@@ -1,27 +1,27 @@
 import express from 'express';
-import cors from 'cors';
-import dotenv from 'dotenv';
 import { fileURLToPath } from 'url';
 import { dirname, resolve } from 'path';
-import healthRoutes from './routes/health.ts';
-import aiChefRoutes from './routes/aiChefRoutes.ts';
+import dotenv from 'dotenv';
+import routes from './routes/index';
+import { corsMiddleware, errorHandler, notFoundHandler } from './middleware';
+import { env } from './config/env';
 
-// Load .env from root directory
+// Load .env from root directory for legacy scripts
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 dotenv.config({ path: resolve(__dirname, '../../.env') });
 
 const app = express();
-const port = process.env.PORT || 3000;
 
-app.use(cors());
+app.use(corsMiddleware);
 app.use(express.json());
 
-// Routes
-app.use('/health', healthRoutes);
-app.use('/api/recipes', aiChefRoutes);
+app.use('/api', routes);
 
-app.listen(port, () => {
-  console.log(`Server is running on port ${port}`);
+app.use(notFoundHandler);
+app.use(errorHandler);
+
+app.listen(env.PORT, () => {
+  console.log(`Server is running on port ${env.PORT}`);
 });
 

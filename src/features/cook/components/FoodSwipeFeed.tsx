@@ -10,6 +10,8 @@ import { Meal, MealTag } from '@/lib/types';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
 import { useNavigate } from 'react-router-dom';
+import { Input } from '@/components/ui/input';
+import { Search, X } from 'lucide-react';
 
 const filterLabels: Record<MealTag | 'all', string> = {
   all: 'All',
@@ -26,7 +28,15 @@ const filterLabels: Record<MealTag | 'all', string> = {
 };
 
 export function FoodSwipeFeed() {
-  const { filteredMeals, activeFilter, setFilter, availableFilters } = useMeals();
+  const {
+    filteredMeals,
+    activeFilter,
+    setFilter,
+    availableFilters,
+    searchQuery,
+    setSearchQuery,
+    clearSearch
+  } = useMeals();
   const { isFavorite, toggleFavorite } = useFavorites();
   const { user } = useAuth();
   const navigate = useNavigate();
@@ -62,6 +72,28 @@ export function FoodSwipeFeed() {
 
   return (
     <div className="w-full">
+      {/* Search */}
+      <div className="mb-5">
+        <div className="relative">
+          <Input
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            placeholder="Search recipes or ingredients..."
+            className="pl-11 pr-10 h-11 bg-secondary/50 border-secondary/60 focus-visible:ring-2 focus-visible:ring-primary/40"
+          />
+          <Search className="h-4 w-4 text-muted-foreground absolute left-3 top-1/2 -translate-y-1/2" />
+          {searchQuery && (
+            <button
+              onClick={clearSearch}
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+              aria-label="Clear search"
+            >
+              <X className="h-4 w-4" />
+            </button>
+          )}
+        </div>
+      </div>
+
       {/* Filter Bar */}
       <div className="mb-6 -mx-4 px-4 overflow-x-auto scrollbar-hide">
         <div className="flex gap-2 pb-2">
@@ -89,12 +121,14 @@ export function FoodSwipeFeed() {
       >
         {filteredMeals.length === 0 ? (
           <div className="text-center py-12">
-            <p className="text-muted-foreground">No meals found with this filter.</p>
+            <p className="text-muted-foreground">
+              No meals match your search{activeFilter !== 'all' ? ' and filter' : ''}.
+            </p>
             <button
               onClick={() => setFilter('all')}
               className="mt-2 text-primary hover:underline text-sm"
             >
-              Show all meals
+              Reset filters
             </button>
           </div>
         ) : (
