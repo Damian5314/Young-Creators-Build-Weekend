@@ -9,6 +9,8 @@ interface RecipeCardProps {
   recipe: Recipe;
   isActive: boolean;
   isLiked: boolean;
+  isMuted: boolean;
+  onToggleMute: () => void;
   onLike: () => void;
   onSave: () => void;
   onShare: () => void;
@@ -18,13 +20,14 @@ export function RecipeCard({
   recipe,
   isActive,
   isLiked,
+  isMuted,
+  onToggleMute,
   onLike,
   onSave,
   onShare,
 }: RecipeCardProps) {
   const videoRef = useRef<HTMLVideoElement>(null);
   const [showHeart, setShowHeart] = useState(false);
-  const [isMuted, setIsMuted] = useState(true);
 
   useEffect(() => {
     if (videoRef.current) {
@@ -43,10 +46,6 @@ export function RecipeCard({
       videoRef.current.muted = isMuted;
     }
   }, [isMuted]);
-
-  const toggleMute = () => {
-    setIsMuted(!isMuted);
-  };
 
   const handleDoubleTap = () => {
     if (!isLiked) {
@@ -138,7 +137,7 @@ export function RecipeCard({
               <Button
                 variant="ghost"
                 size="icon"
-                onClick={toggleMute}
+                onClick={onToggleMute}
                 className="h-10 w-10 rounded-full bg-neutral-800/80 hover:bg-neutral-700 text-white backdrop-blur-sm"
               >
                 {isMuted ? <VolumeX className="h-5 w-5" /> : <Volume2 className="h-5 w-5" />}

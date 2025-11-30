@@ -10,6 +10,8 @@ interface VideoCardProps {
   video: VideoWithRestaurant;
   isActive: boolean;
   isLiked: boolean;
+  isMuted: boolean;
+  onToggleMute: () => void;
   onLike: () => void;
   onSave: () => void;
   onOrder: () => void;
@@ -21,6 +23,8 @@ export function VideoCard({
   video,
   isActive,
   isLiked,
+  isMuted,
+  onToggleMute,
   onLike,
   onSave,
   onOrder,
@@ -30,7 +34,6 @@ export function VideoCard({
   const navigate = useNavigate();
   const videoRef = useRef<HTMLVideoElement>(null);
   const [showHeart, setShowHeart] = useState(false);
-  const [isMuted, setIsMuted] = useState(true);
 
   useEffect(() => {
     if (videoRef.current) {
@@ -49,10 +52,6 @@ export function VideoCard({
       videoRef.current.muted = isMuted;
     }
   }, [isMuted]);
-
-  const toggleMute = () => {
-    setIsMuted(!isMuted);
-  };
 
   const handleDoubleTap = () => {
     if (!isLiked) {
@@ -167,7 +166,7 @@ export function VideoCard({
             <Button
               variant="ghost"
               size="icon"
-              onClick={toggleMute}
+              onClick={onToggleMute}
               className="h-10 w-10 rounded-full bg-neutral-800/80 hover:bg-neutral-700 text-white backdrop-blur-sm"
             >
               {isMuted ? <VolumeX className="h-5 w-5" /> : <Volume2 className="h-5 w-5" />}
