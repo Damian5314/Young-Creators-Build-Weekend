@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { User, MapPin, LogOut, ChevronRight, Store, Check, Loader2, Plus, X, Folder, Trash2, Play } from 'lucide-react';
+import { User, MapPin, LogOut, ChevronRight, Store, Check, Loader2, Plus, X, Folder, Trash2, Play, UtensilsCrossed, FolderOpen } from 'lucide-react';
 import { AppLayout } from '@/shared/components';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -10,6 +10,8 @@ import { DIETARY_OPTIONS } from '@/shared/constants';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { Collection } from '@/shared/types';
+
+type CollectionTabType = 'recipes' | 'restaurants';
 
 interface CollectionWithItems extends Collection {
   itemCount: number;
@@ -33,9 +35,12 @@ export default function ProfilePage() {
   const [loadingCollections, setLoadingCollections] = useState(true);
   const [showCreate, setShowCreate] = useState(false);
   const [newCollectionName, setNewCollectionName] = useState('');
-  const [newCollectionType, setNewCollectionType] = useState<'RESTAURANT' | 'RECIPE'>('RESTAURANT');
+  const [newCollectionType, setNewCollectionType] = useState<'RESTAURANT' | 'RECIPE'>('RECIPE');
   const [selectedCollection, setSelectedCollection] = useState<Collection | null>(null);
   const [collectionItems, setCollectionItems] = useState<any[]>([]);
+  const [collectionTab, setCollectionTab] = useState<CollectionTabType>('recipes');
+  const [editMode, setEditMode] = useState(false);
+  const [selectedItems, setSelectedItems] = useState<Set<string>>(new Set());
 
   const isOwner = profile?.role === 'OWNER';
 
@@ -133,6 +138,8 @@ export default function ProfilePage() {
 
   const openCollection = async (collection: Collection) => {
     setSelectedCollection(collection);
+    setEditMode(false);
+    setSelectedItems(new Set());
 
     const { data: items } = await supabase
       .from('collection_items')
@@ -185,6 +192,38 @@ export default function ProfilePage() {
     setCollectionItems(collectionItems.filter((i) => i.id !== itemId));
     toast.success('Verwijderd uit collectie');
   };
+
+  const toggleItemSelection = (itemId: string) => {
+    const newSelected = new Set(selectedItems);
+    if (newSelected.has(itemId)) {
+      newSelected.delete(itemId);
+    } else {
+      newSelected.add(itemId);
+    }
+    setSelectedItems(newSelected);
+  };
+
+  const deleteSelectedItems = async () => {
+    if (!selectedCollection || selectedItems.size === 0) return;
+
+    for (const itemId of selectedItems) {
+      await supabase
+        .from('collection_items')
+        .delete()
+        .eq('collection_id', selectedCollection.id)
+        .eq('item_id', itemId);
+    }
+
+    setCollectionItems(collectionItems.filter((i) => !selectedItems.has(i.id)));
+    setSelectedItems(new Set());
+    setEditMode(false);
+    toast.success(`${selectedItems.size} items verwijderd`);
+  };
+
+  // Filter collections by tab
+  const recipeCollections = collections.filter((c) => c.type === 'RECIPE');
+  const restaurantCollections = collections.filter((c) => c.type === 'RESTAURANT');
+  const filteredCollections = collectionTab === 'recipes' ? recipeCollections : restaurantCollections;
 
   const hasChanges =
     formData.name !== (profile?.name || '') ||
@@ -373,6 +412,8 @@ export default function ProfilePage() {
                   >
                     {type}
                     <button
+                      type="button"
+                      aria-label={`Remove ${type} cuisine type`}
                       onClick={() => removeCuisineType(type)}
                       className="hover:bg-primary-foreground/20 rounded-full p-0.5 transition-colors"
                     >
@@ -410,43 +451,110 @@ export default function ProfilePage() {
           </div>
         )}
 
-        {/* Collections section */}
-        <div className="card-elevated mb-4">
+        {/* Collections section - Premium Dark UI */}
+        <div className="rounded-2xl bg-zinc-900/50 border border-white/5 p-4 mb-4">
           <div className="flex items-center justify-between mb-4">
-            <h3 className="section-title flex items-center gap-2 mb-0">
-              <Folder className="h-4 w-4 text-primary" />
+            <h3 className="font-semibold text-white flex items-center gap-2">
+              <Folder className="h-4 w-4" style={{ color: '#fd6159' }} />
               Mijn Collecties
             </h3>
-            <Button onClick={() => setShowCreate(true)} size="sm" variant="ghost" className="gap-1.5">
-              <Plus className="h-4 w-4" />
-              Nieuw
-            </Button>
+            <motion.button
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              onClick={() => setShowCreate(true)}
+              className="w-8 h-8 rounded-full flex items-center justify-center shadow-lg"
+              style={{ backgroundColor: '#fd6159', boxShadow: '0 4px 14px rgba(253, 97, 89, 0.3)' }}
+            >
+              <Plus className="h-4 w-4 text-white" />
+            </motion.button>
+          </div>
+
+          {/* Tabs */}
+          <div className="flex gap-1 p-1 bg-white/5 rounded-xl mb-4">
+            <button
+              onClick={() => setCollectionTab('recipes')}
+              className={`flex-1 py-2 px-3 rounded-lg text-xs font-medium transition-all duration-200 flex items-center justify-center gap-1.5 ${
+                collectionTab === 'recipes'
+                  ? 'bg-white/10 text-white'
+                  : 'text-zinc-500 hover:text-zinc-300'
+              }`}
+            >
+              <UtensilsCrossed className="h-3.5 w-3.5" />
+              Recepten
+              <span className="text-[10px] bg-white/10 px-1.5 py-0.5 rounded-full">
+                {recipeCollections.length}
+              </span>
+            </button>
+            <button
+              onClick={() => setCollectionTab('restaurants')}
+              className={`flex-1 py-2 px-3 rounded-lg text-xs font-medium transition-all duration-200 flex items-center justify-center gap-1.5 ${
+                collectionTab === 'restaurants'
+                  ? 'bg-white/10 text-white'
+                  : 'text-zinc-500 hover:text-zinc-300'
+              }`}
+            >
+              <MapPin className="h-3.5 w-3.5" />
+              Restaurants
+              <span className="text-[10px] bg-white/10 px-1.5 py-0.5 rounded-full">
+                {restaurantCollections.length}
+              </span>
+            </button>
           </div>
 
           {loadingCollections ? (
-            <div className="flex justify-center py-4">
-              <Loader2 className="h-6 w-6 animate-spin text-primary" />
+            <div className="flex justify-center py-6">
+              <Loader2 className="h-6 w-6 animate-spin" style={{ color: '#fd6159' }} />
             </div>
-          ) : collections.length === 0 ? (
-            <p className="text-sm text-muted-foreground text-center py-4">
-              Nog geen collecties. Maak er een aan om je favorieten op te slaan!
-            </p>
+          ) : filteredCollections.length === 0 ? (
+            <div className="flex flex-col items-center py-6">
+              <div className="w-12 h-12 mb-3 rounded-xl bg-zinc-800/50 border border-white/5 flex items-center justify-center">
+                {collectionTab === 'recipes' ? (
+                  <UtensilsCrossed className="h-6 w-6 text-zinc-600" />
+                ) : (
+                  <MapPin className="h-6 w-6 text-zinc-600" />
+                )}
+              </div>
+              <p className="text-sm text-zinc-500 text-center">
+                Nog geen {collectionTab === 'recipes' ? 'recept' : 'restaurant'} collecties
+              </p>
+              <button
+                onClick={() => {
+                  setNewCollectionType(collectionTab === 'recipes' ? 'RECIPE' : 'RESTAURANT');
+                  setShowCreate(true);
+                }}
+                className="mt-2 text-xs hover:opacity-80"
+                style={{ color: '#fd6159' }}
+              >
+                Maak er een aan
+              </button>
+            </div>
           ) : (
             <div className="grid grid-cols-2 gap-2">
-              {collections.map((collection) => (
-                <button
+              {filteredCollections.map((collection, index) => (
+                <motion.button
                   key={collection.id}
+                  initial={{ opacity: 0, scale: 0.95 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  transition={{ delay: index * 0.05 }}
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
                   onClick={() => openCollection(collection)}
-                  className="p-3 bg-secondary rounded-xl text-left hover:bg-secondary/80 transition-colors"
+                  className="group relative p-3 rounded-xl bg-zinc-800/50 border border-white/5 text-left transition-all duration-200 hover:border-white/10 hover:bg-zinc-800/70"
                 >
                   <div className="flex items-center gap-2 mb-1">
-                    <Folder className="h-4 w-4 text-primary" />
-                    <span className="font-medium text-sm truncate">{collection.name}</span>
+                    <div className="w-7 h-7 rounded-lg flex items-center justify-center" style={{ backgroundColor: 'rgba(253, 97, 89, 0.2)' }}>
+                      {collection.type === 'RECIPE' ? (
+                        <UtensilsCrossed className="h-3.5 w-3.5" style={{ color: '#fd6159' }} />
+                      ) : (
+                        <MapPin className="h-3.5 w-3.5" style={{ color: '#fd6159' }} />
+                      )}
+                    </div>
+                    <span className="font-medium text-sm text-white truncate flex-1">{collection.name}</span>
                   </div>
-                  <p className="text-xs text-muted-foreground">
-                    {collection.itemCount} items
+                  <p className="text-xs text-zinc-500 ml-9">
+                    {collection.itemCount} {collection.itemCount === 1 ? 'item' : 'items'}
                   </p>
-                </button>
+                </motion.button>
               ))}
             </div>
           )}
@@ -476,67 +584,85 @@ export default function ProfilePage() {
         </Button>
       </div>
 
-      {/* Create collection modal */}
+      {/* Create collection modal - Premium Dark UI */}
       <AnimatePresence>
         {showCreate && (
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-4 bg-background/80 backdrop-blur-md"
+            className="fixed inset-0 z-50 flex items-end justify-center bg-black/60 backdrop-blur-sm"
             onClick={() => setShowCreate(false)}
           >
             <motion.div
-              initial={{ y: 100, opacity: 0 }}
-              animate={{ y: 0, opacity: 1 }}
-              exit={{ y: 100, opacity: 0 }}
-              transition={{ type: 'spring', damping: 25, stiffness: 300 }}
-              className="w-full max-w-sm rounded-3xl bg-card p-6 shadow-elevated border border-border"
+              initial={{ y: '100%' }}
+              animate={{ y: 0 }}
+              exit={{ y: '100%' }}
+              transition={{ type: 'spring', damping: 30, stiffness: 300 }}
+              className="w-full max-w-lg rounded-t-3xl bg-zinc-900 border-t border-white/10 p-6"
               onClick={(e) => e.stopPropagation()}
             >
-              <h2 className="text-xl font-display font-bold mb-6">Nieuwe Collectie</h2>
+              {/* Handle bar */}
+              <div className="w-10 h-1 bg-zinc-700 rounded-full mx-auto mb-6" />
 
-              <div className="space-y-4">
+              <h2 className="text-xl font-bold text-white mb-6">Nieuwe Collectie</h2>
+
+              <div className="space-y-5">
                 <div>
-                  <label className="section-title">Naam</label>
+                  <label className="text-sm font-medium text-zinc-400 mb-2 block">Naam</label>
                   <Input
                     placeholder="Mijn favorieten..."
                     value={newCollectionName}
                     onChange={(e) => setNewCollectionName(e.target.value)}
-                    className="h-12"
+                    className="h-12 bg-white/5 border-white/10 text-white placeholder:text-zinc-600 rounded-xl focus:border-[#fd6159]/50"
                   />
                 </div>
 
                 <div>
-                  <label className="section-title">Type</label>
-                  <div className="flex gap-2">
-                    <Button
-                      variant={newCollectionType === 'RESTAURANT' ? 'default' : 'secondary'}
-                      onClick={() => setNewCollectionType('RESTAURANT')}
-                      className="flex-1 h-12"
-                    >
-                      Restaurants
-                    </Button>
-                    <Button
-                      variant={newCollectionType === 'RECIPE' ? 'default' : 'secondary'}
+                  <label className="text-sm font-medium text-zinc-400 mb-2 block">Type</label>
+                  <div className="flex gap-3">
+                    <button
                       onClick={() => setNewCollectionType('RECIPE')}
-                      className="flex-1 h-12"
+                      className={`flex-1 h-14 rounded-xl border transition-all duration-200 flex items-center justify-center gap-2 ${
+                        newCollectionType === 'RECIPE'
+                          ? 'border-[#fd6159]/50'
+                          : 'bg-white/5 border-white/10 text-zinc-400 hover:border-white/20'
+                      }`}
+                      style={newCollectionType === 'RECIPE' ? { backgroundColor: 'rgba(253, 97, 89, 0.1)', color: '#fd6159' } : {}}
                     >
+                      <UtensilsCrossed className="h-5 w-5" />
                       Recepten
-                    </Button>
+                    </button>
+                    <button
+                      onClick={() => setNewCollectionType('RESTAURANT')}
+                      className={`flex-1 h-14 rounded-xl border transition-all duration-200 flex items-center justify-center gap-2 ${
+                        newCollectionType === 'RESTAURANT'
+                          ? 'border-[#fd6159]/50'
+                          : 'bg-white/5 border-white/10 text-zinc-400 hover:border-white/20'
+                      }`}
+                      style={newCollectionType === 'RESTAURANT' ? { backgroundColor: 'rgba(253, 97, 89, 0.1)', color: '#fd6159' } : {}}
+                    >
+                      <MapPin className="h-5 w-5" />
+                      Restaurants
+                    </button>
                   </div>
                 </div>
               </div>
 
               <div className="flex gap-3 mt-8">
                 <Button
-                  variant="secondary"
+                  variant="ghost"
                   onClick={() => setShowCreate(false)}
-                  className="flex-1 h-12"
+                  className="flex-1 h-12 rounded-xl text-zinc-400 hover:text-white hover:bg-white/5"
                 >
                   Annuleren
                 </Button>
-                <Button onClick={createCollection} disabled={!newCollectionName.trim()} className="flex-1 h-12">
+                <Button
+                  onClick={createCollection}
+                  disabled={!newCollectionName.trim()}
+                  className="flex-1 h-12 rounded-xl text-white disabled:opacity-50 hover:opacity-90"
+                  style={{ backgroundColor: '#fd6159' }}
+                >
                   Aanmaken
                 </Button>
               </div>
@@ -545,48 +671,144 @@ export default function ProfilePage() {
         )}
       </AnimatePresence>
 
-      {/* Collection detail modal */}
+      {/* Collection detail modal - Premium Dark UI */}
       <AnimatePresence>
         {selectedCollection && (
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 z-50 bg-background"
+            className="fixed inset-0 z-50 bg-zinc-950"
           >
             <div className="h-full flex flex-col">
-              <div className="flex items-center justify-between p-4 border-b border-border">
+              {/* Header */}
+              <div className="flex items-center justify-between p-4 border-b border-white/5 bg-zinc-900/50">
                 <div className="flex items-center gap-3">
-                  <Button variant="ghost" size="icon" onClick={() => setSelectedCollection(null)}>
+                  <motion.button
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                    onClick={() => {
+                      setSelectedCollection(null);
+                      setEditMode(false);
+                      setSelectedItems(new Set());
+                    }}
+                    className="w-10 h-10 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center text-zinc-400 hover:text-white transition-colors"
+                  >
                     <X className="h-5 w-5" />
-                  </Button>
-                  <h2 className="text-lg font-display font-bold">{selectedCollection.name}</h2>
+                  </motion.button>
+                  <div>
+                    <h2 className="text-lg font-bold text-white">{selectedCollection.name}</h2>
+                    <p className="text-xs text-zinc-500">{collectionItems.length} items</p>
+                  </div>
                 </div>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  onClick={() => {
-                    deleteCollection(selectedCollection.id);
-                    setSelectedCollection(null);
-                  }}
-                >
-                  <Trash2 className="h-5 w-5 text-destructive" />
-                </Button>
+                <div className="flex items-center gap-2">
+                  {collectionItems.length > 0 && (
+                    <motion.button
+                      whileHover={{ scale: 1.05 }}
+                      whileTap={{ scale: 0.95 }}
+                      onClick={() => {
+                        setEditMode(!editMode);
+                        setSelectedItems(new Set());
+                      }}
+                      className={`px-3 py-2 rounded-xl text-xs font-medium transition-all ${
+                        editMode
+                          ? 'border border-[#fd6159]/30'
+                          : 'bg-white/5 border border-white/10 text-zinc-400 hover:text-white'
+                      }`}
+                      style={editMode ? { backgroundColor: 'rgba(253, 97, 89, 0.2)', color: '#fd6159' } : {}}
+                    >
+                      {editMode ? 'Klaar' : 'Bewerken'}
+                    </motion.button>
+                  )}
+                  <motion.button
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                    onClick={() => {
+                      deleteCollection(selectedCollection.id);
+                      setSelectedCollection(null);
+                    }}
+                    className="w-10 h-10 rounded-xl bg-red-500/10 border border-red-500/20 flex items-center justify-center text-red-500 hover:bg-red-500/20 transition-colors"
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </motion.button>
+                </div>
               </div>
 
+              {/* Edit mode action bar */}
+              <AnimatePresence>
+                {editMode && selectedItems.size > 0 && (
+                  <motion.div
+                    initial={{ height: 0, opacity: 0 }}
+                    animate={{ height: 'auto', opacity: 1 }}
+                    exit={{ height: 0, opacity: 0 }}
+                    className="bg-zinc-900 border-b border-white/5 px-4 py-3"
+                  >
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm text-zinc-400">
+                        {selectedItems.size} geselecteerd
+                      </span>
+                      <motion.button
+                        whileHover={{ scale: 1.02 }}
+                        whileTap={{ scale: 0.98 }}
+                        onClick={deleteSelectedItems}
+                        className="px-4 py-2 rounded-xl bg-red-500 text-white text-sm font-medium flex items-center gap-2"
+                      >
+                        <Trash2 className="h-4 w-4" />
+                        Verwijderen
+                      </motion.button>
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+
+              {/* Content */}
               <div className="flex-1 overflow-y-auto p-4 pb-24">
                 {collectionItems.length === 0 ? (
-                  <div className="text-center py-12 text-muted-foreground">
-                    Deze collectie is leeg
+                  <div className="flex flex-col items-center justify-center py-16">
+                    <div className="w-16 h-16 mb-4 rounded-2xl bg-zinc-800/50 border border-white/5 flex items-center justify-center">
+                      <FolderOpen className="h-8 w-8 text-zinc-600" />
+                    </div>
+                    <p className="text-zinc-500 text-center">Deze collectie is leeg</p>
+                    <p className="text-xs text-zinc-600 mt-1">
+                      Voeg items toe vanuit de feed
+                    </p>
                   </div>
                 ) : (
-                  <div className="space-y-3">
-                    {collectionItems.map((item) => (
-                      <div
+                  <div className="space-y-2">
+                    {collectionItems.map((item, index) => (
+                      <motion.div
                         key={item.id}
-                        className="flex items-center gap-3 p-3 bg-card rounded-xl border border-border"
+                        initial={{ opacity: 0, y: 10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: index * 0.03 }}
+                        className={`flex items-center gap-3 p-3 rounded-xl border transition-all ${
+                          editMode && selectedItems.has(item.id)
+                            ? 'border-[#fd6159]/30'
+                            : 'bg-zinc-900/50 border-white/5 hover:border-white/10'
+                        }`}
+                        style={editMode && selectedItems.has(item.id) ? { backgroundColor: 'rgba(253, 97, 89, 0.1)' } : {}}
+                        onClick={() => editMode && toggleItemSelection(item.id)}
                       >
-                        <div className="h-16 w-16 rounded-lg bg-secondary overflow-hidden flex-shrink-0">
+                        {/* Edit mode checkbox */}
+                        {editMode && (
+                          <motion.div
+                            initial={{ scale: 0 }}
+                            animate={{ scale: 1 }}
+                            className={`w-6 h-6 rounded-lg border-2 flex items-center justify-center transition-all ${
+                              selectedItems.has(item.id)
+                                ? ''
+                                : 'border-zinc-600'
+                            }`}
+                            style={selectedItems.has(item.id) ? { backgroundColor: '#fd6159', borderColor: '#fd6159' } : {}}
+                          >
+                            {selectedItems.has(item.id) && (
+                              <Check className="h-4 w-4 text-white" />
+                            )}
+                          </motion.div>
+                        )}
+
+                        {/* Thumbnail */}
+                        <div className="h-14 w-14 rounded-lg bg-zinc-800 overflow-hidden flex-shrink-0">
                           {item.thumbnail_url || item.image_url ? (
                             <img
                               src={item.thumbnail_url || item.image_url}
@@ -596,40 +818,67 @@ export default function ProfilePage() {
                           ) : (
                             <div className="h-full w-full flex items-center justify-center">
                               {item._type === 'VIDEO' ? (
-                                <Play className="h-6 w-6 text-muted-foreground" />
+                                <Play className="h-5 w-5 text-zinc-600" />
+                              ) : item._type === 'RECIPE' ? (
+                                <UtensilsCrossed className="h-5 w-5 text-zinc-600" />
                               ) : (
-                                <Folder className="h-6 w-6 text-muted-foreground" />
+                                <MapPin className="h-5 w-5 text-zinc-600" />
                               )}
                             </div>
                           )}
                         </div>
 
+                        {/* Info */}
                         <div className="flex-1 min-w-0">
-                          <h3 className="font-semibold truncate">{item.title || item.name}</h3>
-                          <p className="text-sm text-muted-foreground capitalize">
-                            {item._type === 'VIDEO' ? 'Video' : item._type === 'RECIPE' ? 'Recept' : 'Restaurant'}
-                          </p>
+                          <h3 className="font-medium text-white text-sm truncate">
+                            {item.title || item.name}
+                          </h3>
+                          <div className="flex items-center gap-2 mt-0.5">
+                            <span
+                              className={`text-[10px] px-2 py-0.5 rounded-full ${
+                                item._type === 'VIDEO'
+                                  ? 'bg-purple-500/20 text-purple-400'
+                                  : item._type === 'RESTAURANT'
+                                  ? 'bg-blue-500/20 text-blue-400'
+                                  : ''
+                              }`}
+                              style={item._type === 'RECIPE' ? { backgroundColor: 'rgba(253, 97, 89, 0.2)', color: '#fd6159' } : {}}
+                            >
+                              {item._type === 'VIDEO' ? 'Video' : item._type === 'RECIPE' ? 'Recept' : 'Restaurant'}
+                            </span>
+                          </div>
                         </div>
 
-                        <div className="flex items-center gap-2">
-                          {item._type === 'VIDEO' && item.restaurant && (
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              onClick={() => navigate(`/restaurant/${item.restaurant.id}`)}
+                        {/* Actions (only when not in edit mode) */}
+                        {!editMode && (
+                          <div className="flex items-center gap-1">
+                            {item._type === 'VIDEO' && item.restaurant && (
+                              <motion.button
+                                whileHover={{ scale: 1.1 }}
+                                whileTap={{ scale: 0.9 }}
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  navigate(`/restaurant/${item.restaurant.id}`);
+                                }}
+                                className="w-8 h-8 rounded-lg bg-white/5 flex items-center justify-center text-zinc-400 hover:text-white transition-colors"
+                              >
+                                <ChevronRight className="h-4 w-4" />
+                              </motion.button>
+                            )}
+                            <motion.button
+                              whileHover={{ scale: 1.1 }}
+                              whileTap={{ scale: 0.9 }}
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                removeFromCollection(item.id);
+                              }}
+                              className="w-8 h-8 rounded-lg bg-red-500/10 flex items-center justify-center text-red-500 hover:bg-red-500/20 transition-colors"
                             >
-                              <ChevronRight className="h-5 w-5" />
-                            </Button>
-                          )}
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            onClick={() => removeFromCollection(item.id)}
-                          >
-                            <Trash2 className="h-4 w-4 text-destructive" />
-                          </Button>
-                        </div>
-                      </div>
+                              <Trash2 className="h-4 w-4" />
+                            </motion.button>
+                          </div>
+                        )}
+                      </motion.div>
                     ))}
                   </div>
                 )}
