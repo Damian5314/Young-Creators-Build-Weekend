@@ -1,12 +1,22 @@
-import { useEffect, useMemo, useState, FormEvent } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { X, Heart, Share2, Clock, ChefHat, ExternalLink, Play, Bookmark, MessageCircle } from 'lucide-react';
-import { Meal, MealTag } from '@/lib/types';
-import { cn } from '@/lib/utils';
-import { toast } from 'sonner';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { recipesApi, RecipeChatMessage } from '@/api';
+import { useEffect, useMemo, useState, FormEvent } from "react";
+import { motion, AnimatePresence } from "framer-motion";
+import {
+  X,
+  Heart,
+  Share2,
+  Clock,
+  ChefHat,
+  ExternalLink,
+  Play,
+  Bookmark,
+  MessageCircle,
+} from "lucide-react";
+import { Meal, MealTag } from "@/lib/types";
+import { cn } from "@/lib/utils";
+import { toast } from "sonner";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { recipesApi, RecipeChatMessage } from "@/api";
 
 interface MealDetailModalProps {
   meal: Meal | null;
@@ -20,16 +30,16 @@ interface MealDetailModalProps {
 type ChatMessage = RecipeChatMessage & { id: string };
 
 const tagLabels: Record<MealTag, string> = {
-  pasta: 'Pasta',
-  vegan: 'Vegan',
-  soup: 'Soup',
-  stirfry: 'Stir Fry',
-  quick: 'Quick',
-  cheap: 'Budget',
-  'high-protein': 'High Protein',
-  breakfast: 'Breakfast',
-  dessert: 'Dessert',
-  healthy: 'Healthy'
+  pasta: "Pasta",
+  vegan: "Vegan",
+  soup: "Soup",
+  stirfry: "Stir Fry",
+  quick: "Quick",
+  cheap: "Budget",
+  "high-protein": "High Protein",
+  breakfast: "Breakfast",
+  dessert: "Dessert",
+  healthy: "Healthy",
 };
 
 function getYouTubeEmbedUrl(url: string): string | null {
@@ -47,25 +57,25 @@ export function MealDetailModal({
   onClose,
   isFavorite,
   onToggleFavorite,
-  onSave
+  onSave,
 }: MealDetailModalProps) {
   if (!meal) return null;
 
   const [isChatOpen, setIsChatOpen] = useState(false);
   const [chatMessages, setChatMessages] = useState<ChatMessage[]>([]);
-  const [chatInput, setChatInput] = useState('');
+  const [chatInput, setChatInput] = useState("");
   const [chatLoading, setChatLoading] = useState(false);
 
   useEffect(() => {
     if (meal && isOpen) {
       setChatMessages([
         {
-          id: 'intro',
-          role: 'assistant',
+          id: "intro",
+          role: "assistant",
           content: `Hey! I'm your AI sous chef for ${meal.name}. Ask me anything about this recipe.`,
         },
       ]);
-      setChatInput('');
+      setChatInput("");
       setChatLoading(false);
       setIsChatOpen(false);
     }
@@ -87,43 +97,46 @@ export function MealDetailModal({
 
     const userMessage: ChatMessage = {
       id: `user-${Date.now()}`,
-      role: 'user',
+      role: "user",
       content: chatInput.trim(),
     };
 
-    setChatMessages(prev => [...prev, userMessage]);
-    setChatInput('');
+    setChatMessages((prev) => [...prev, userMessage]);
+    setChatInput("");
     setChatLoading(true);
 
     try {
       const response = await recipesApi.chat(meal.id, {
         message: userMessage.content,
         context: recipeContext,
-        history: [...chatMessages, userMessage].map(({ role, content }) => ({ role, content })),
+        history: [...chatMessages, userMessage].map(({ role, content }) => ({
+          role,
+          content,
+        })),
       });
 
       const replyText =
         (response.data && (response.data.reply as string | undefined)) ||
         (response.data && (response.data.message as string | undefined)) ||
-        'I could not find an answer right now, please try again.';
+        "I could not find an answer right now, please try again.";
 
-      setChatMessages(prev => [
+      setChatMessages((prev) => [
         ...prev,
         {
           id: `assistant-${Date.now()}`,
-          role: 'assistant',
+          role: "assistant",
           content: replyText,
         },
       ]);
     } catch (error) {
-      console.error('Recipe chat error:', error);
-      toast.error('Chef GPT is unavailable. Please try again.');
-      setChatMessages(prev => [
+      console.error("Recipe chat error:", error);
+      toast.error("Chef GPT is unavailable. Please try again.");
+      setChatMessages((prev) => [
         ...prev,
         {
           id: `assistant-${Date.now()}`,
-          role: 'assistant',
-          content: 'Sorry, something went wrong while fetching an answer.',
+          role: "assistant",
+          content: "Sorry, something went wrong while fetching an answer.",
         },
       ]);
     } finally {
@@ -135,20 +148,24 @@ export function MealDetailModal({
     const shareData = {
       title: meal.name,
       text: `Check out this recipe: ${meal.name}`,
-      url: window.location.href
+      url: window.location.href,
     };
 
     try {
       if (navigator.share) {
         await navigator.share(shareData);
       } else {
-        await navigator.clipboard.writeText(`${meal.name} - ${window.location.href}`);
-        toast.success('Link copied to clipboard!');
+        await navigator.clipboard.writeText(
+          `${meal.name} - ${window.location.href}`
+        );
+        toast.success("Link copied to clipboard!");
       }
     } catch (err) {
-      if ((err as Error).name !== 'AbortError') {
-        await navigator.clipboard.writeText(`${meal.name} - ${window.location.href}`);
-        toast.success('Link copied to clipboard!');
+      if ((err as Error).name !== "AbortError") {
+        await navigator.clipboard.writeText(
+          `${meal.name} - ${window.location.href}`
+        );
+        toast.success("Link copied to clipboard!");
       }
     }
   };
@@ -156,7 +173,7 @@ export function MealDetailModal({
   const handleFavorite = () => {
     onToggleFavorite(meal.id);
     if (!isFavorite) {
-      toast.success('Added to favorites!');
+      toast.success("Added to favorites!");
     }
   };
 
@@ -176,7 +193,7 @@ export function MealDetailModal({
             initial={{ opacity: 0, scale: 0.95, y: 20 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.95, y: 20 }}
-            transition={{ type: 'spring', damping: 25, stiffness: 300 }}
+            transition={{ type: "spring", damping: 25, stiffness: 300 }}
             onClick={(e) => e.stopPropagation()}
             className="relative w-full max-w-lg bg-card rounded-2xl overflow-hidden max-h-[90vh] overflow-y-auto my-auto"
           >
@@ -203,13 +220,17 @@ export function MealDetailModal({
                 {meal.durationMinutes && (
                   <div className="flex items-center gap-1 bg-neutral-800 px-2.5 py-1 rounded-full">
                     <Clock className="h-3.5 w-3.5 text-white" />
-                    <span className="text-xs font-medium text-white">{meal.durationMinutes} min</span>
+                    <span className="text-xs font-medium text-white">
+                      {meal.durationMinutes} min
+                    </span>
                   </div>
                 )}
                 {meal.difficulty && (
                   <div className="flex items-center gap-1 bg-neutral-800 px-2.5 py-1 rounded-full">
                     <ChefHat className="h-3.5 w-3.5 text-white" />
-                    <span className="text-xs font-medium text-white capitalize">{meal.difficulty}</span>
+                    <span className="text-xs font-medium text-white capitalize">
+                      {meal.difficulty}
+                    </span>
                   </div>
                 )}
               </div>
@@ -239,7 +260,9 @@ export function MealDetailModal({
                 <div className="flex items-center gap-2 flex-shrink-0">
                   <button
                     onClick={handleFavorite}
-                    aria-label={isFavorite ? "Remove from favorites" : "Add to favorites"}
+                    aria-label={
+                      isFavorite ? "Remove from favorites" : "Add to favorites"
+                    }
                     className={cn(
                       "h-10 w-10 rounded-full flex items-center justify-center transition-all",
                       isFavorite
@@ -247,7 +270,9 @@ export function MealDetailModal({
                         : "bg-secondary text-secondary-foreground hover:bg-secondary/80"
                     )}
                   >
-                    <Heart className={cn("h-5 w-5", isFavorite && "fill-current")} />
+                    <Heart
+                      className={cn("h-5 w-5", isFavorite && "fill-current")}
+                    />
                   </button>
                   <button
                     onClick={onSave}
@@ -276,7 +301,9 @@ export function MealDetailModal({
               {/* Video Section */}
               {meal.videoUrl && (
                 <div className="space-y-2">
-                  <h3 className="font-semibold text-sm text-primary">Video Tutorial</h3>
+                  <h3 className="font-semibold text-sm text-primary">
+                    Video Tutorial
+                  </h3>
                   {embedUrl ? (
                     <div className="aspect-video rounded-xl overflow-hidden bg-secondary">
                       <iframe
@@ -291,7 +318,7 @@ export function MealDetailModal({
                     <Button
                       variant="secondary"
                       className="w-full"
-                      onClick={() => window.open(meal.videoUrl, '_blank')}
+                      onClick={() => window.open(meal.videoUrl, "_blank")}
                     >
                       <Play className="h-4 w-4 mr-2" />
                       Watch on YouTube
@@ -303,10 +330,15 @@ export function MealDetailModal({
 
               {/* Ingredients */}
               <div className="bg-secondary/50 rounded-xl p-4">
-                <h3 className="font-semibold text-sm text-primary mb-3">Ingredients</h3>
+                <h3 className="font-semibold text-sm text-primary mb-3">
+                  Ingredients
+                </h3>
                 <ul className="space-y-2">
                   {meal.ingredients.map((ingredient: string, index: number) => (
-                    <li key={index} className="text-sm text-foreground flex items-start gap-2">
+                    <li
+                      key={index}
+                      className="text-sm text-foreground flex items-start gap-2"
+                    >
                       <span className="text-primary mt-0.5">•</span>
                       {ingredient}
                     </li>
@@ -316,10 +348,15 @@ export function MealDetailModal({
 
               {/* Steps */}
               <div>
-                <h3 className="font-semibold text-sm text-primary mb-3">Instructions</h3>
+                <h3 className="font-semibold text-sm text-primary mb-3">
+                  Instructions
+                </h3>
                 <ol className="space-y-3">
                   {meal.steps.map((step: string, index: number) => (
-                    <li key={index} className="text-sm text-foreground flex items-start gap-3">
+                    <li
+                      key={index}
+                      className="text-sm text-foreground flex items-start gap-3"
+                    >
                       <span className="h-6 w-6 rounded-full bg-primary text-primary-foreground flex items-center justify-center text-xs font-bold flex-shrink-0">
                         {index + 1}
                       </span>
@@ -334,35 +371,39 @@ export function MealDetailModal({
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
                     <MessageCircle className="h-4 w-4 text-primary" />
-                    <h3 className="font-semibold text-sm text-primary">Ask the Chef</h3>
+                    <h3 className="font-semibold text-sm text-primary">
+                      Ask the Chef
+                    </h3>
                   </div>
                   <Button
                     variant="ghost"
                     size="sm"
                     className="gap-1 h-8"
-                    onClick={() => setIsChatOpen(prev => !prev)}
+                    onClick={() => setIsChatOpen((prev) => !prev)}
                   >
-                    {isChatOpen ? 'Hide' : 'Open'} chat
+                    {isChatOpen ? "Hide" : "Open"} chat
                   </Button>
                 </div>
 
                 {isChatOpen && (
                   <div className="space-y-3">
                     <div className="bg-background/60 rounded-xl p-3 h-60 overflow-y-auto space-y-2">
-                      {chatMessages.map(message => (
+                      {chatMessages.map((message) => (
                         <div
                           key={message.id}
                           className={cn(
-                            'flex',
-                            message.role === 'user' ? 'justify-end' : 'justify-start'
+                            "flex",
+                            message.role === "user"
+                              ? "justify-end"
+                              : "justify-start"
                           )}
                         >
                           <div
                             className={cn(
-                              'px-3 py-2 rounded-2xl text-sm max-w-[85%] shadow-sm',
-                              message.role === 'user'
-                                ? 'bg-primary text-primary-foreground'
-                                : 'bg-secondary text-secondary-foreground'
+                              "px-3 py-2 rounded-2xl text-sm max-w-[85%] shadow-sm",
+                              message.role === "user"
+                                ? "bg-primary text-primary-foreground"
+                                : "bg-secondary text-secondary-foreground"
                             )}
                           >
                             {message.content}
@@ -370,7 +411,9 @@ export function MealDetailModal({
                         </div>
                       ))}
                       {chatLoading && (
-                        <p className="text-xs text-muted-foreground">Chef is thinking...</p>
+                        <p className="text-xs text-muted-foreground">
+                          Chef is thinking...
+                        </p>
                       )}
                     </div>
 
@@ -382,8 +425,11 @@ export function MealDetailModal({
                         className="flex-1"
                         disabled={chatLoading}
                       />
-                      <Button type="submit" disabled={chatLoading || !chatInput.trim()}>
-                        {chatLoading ? '...' : 'Send'}
+                      <Button
+                        type="submit"
+                        disabled={chatLoading || !chatInput.trim()}
+                      >
+                        {chatLoading ? "..." : "Send"}
                       </Button>
                     </form>
                   </div>
