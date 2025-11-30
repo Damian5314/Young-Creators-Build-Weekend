@@ -47,6 +47,11 @@ export interface Restaurant {
   image_url?: string;
   opening_hours?: string;
   owner_id?: string;
+  place_id?: string;
+  created_at?: string;
+  updated_at?: string;
+  // Added by nearby query (Haversine distance in km)
+  distance?: number;
 }
 
 export interface VideoWithRestaurant extends Video {

@@ -21,7 +21,8 @@
       "Bash(npm run build:*)",
       "Bash(echo:*)",
       "Bash(npm run seed:*)",
-      "WebSearch"
+      "WebSearch",
+      "Bash(ngrok config add-authtoken:*)"
     ],
     "deny": [],
     "ask": []

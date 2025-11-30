@@ -33,6 +33,9 @@ export interface Restaurant {
   average_rating?: number;
   image_url?: string;
   owner_id?: string;
+  place_id?: string;
+  created_at?: string;
+  updated_at?: string;
 }
 
 export interface Video {

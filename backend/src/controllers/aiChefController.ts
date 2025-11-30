@@ -1,5 +1,15 @@
 import { Request, Response } from 'express';
 
+interface RecipeData {
+  recipes?: unknown[];
+  content?: string;
+  [key: string]: unknown;
+}
+
+interface OpenAIResponse {
+  content?: Array<{ text?: string }>;
+}
+
 export const generateRecipes = async (req: Request, res: Response) => {
   try {
     const { ingredients, mode } = req.body; // mode: 'ingredients' | 'meal'
@@ -31,10 +41,10 @@ export const generateRecipes = async (req: Request, res: Response) => {
       throw new Error(`n8n webhook failed with status: ${response.status}`);
     }
 
-    const data = await response.json();
+    const data = await response.json() as RecipeData | string | OpenAIResponse[];
     console.log('Received response from n8n:', data);
-    
-    let recipesData = data;
+
+    let recipesData: RecipeData = typeof data === 'object' && !Array.isArray(data) ? data : {};
 
     // Helper function to clean markdown code blocks
     const cleanJsonString = (str: string) => {
@@ -44,14 +54,14 @@ export const generateRecipes = async (req: Request, res: Response) => {
     // If data is a string (which can happen if n8n just passes the content string), parse it.
     if (typeof data === 'string') {
         try {
-            recipesData = JSON.parse(cleanJsonString(data));
+            recipesData = JSON.parse(cleanJsonString(data)) as RecipeData;
         } catch (e) {
             console.error('Failed to parse string response from n8n:', e);
         }
-    } else if (data.content && typeof data.content === 'string') {
+    } else if (typeof data === 'object' && !Array.isArray(data) && data.content && typeof data.content === 'string') {
         // If n8n wrapped it in { content: "..." }
         try {
-            recipesData = JSON.parse(cleanJsonString(data.content));
+            recipesData = JSON.parse(cleanJsonString(data.content)) as RecipeData;
         } catch (e) {
              // Maybe it's not JSON string, just use data as is if it has recipes
              if (!data.recipes) console.error('Failed to parse content string from n8n');
@@ -61,15 +71,16 @@ export const generateRecipes = async (req: Request, res: Response) => {
         // Structure: [{ content: [{ text: "..." }] }]
         try {
             const rawText = data[0].content[0].text;
-            recipesData = JSON.parse(cleanJsonString(rawText));
+            recipesData = JSON.parse(cleanJsonString(rawText)) as RecipeData;
         } catch (e) {
             console.error('Failed to parse raw OpenAI output from n8n:', e);
         }
     }
 
     // Ensure we have the recipes array
-    if (!recipesData.recipes && data.recipes) {
-        recipesData = data;
+    const originalData = typeof data === 'object' && !Array.isArray(data) ? data : null;
+    if (!recipesData.recipes && originalData?.recipes) {
+        recipesData = originalData;
     }
 
     res.json({ data: recipesData });
