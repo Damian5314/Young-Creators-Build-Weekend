@@ -63,3 +63,21 @@ export interface PaginationParams {
 export interface GenerateRecipesRequest {
   ingredients: string;
 }
+
+export interface RecipeChatMessage {
+  role: 'user' | 'assistant';
+  content: string;
+}
+
+export interface RecipeChatContext {
+  title: string;
+  description?: string;
+  ingredients: string[];
+  steps: string[];
+}
+
+export interface RecipeChatRequest {
+  message: string;
+  context: RecipeChatContext;
+  history?: RecipeChatMessage[];
+}

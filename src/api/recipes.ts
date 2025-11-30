@@ -20,6 +20,27 @@ export interface GeneratedRecipe {
   steps: string[];
 }
 
+export interface RecipeChatMessage {
+  role: 'user' | 'assistant';
+  content: string;
+}
+
+export interface RecipeChatContext {
+  title: string;
+  description?: string;
+  ingredients: string[];
+  steps: string[];
+}
+
+interface RecipeChatResponse {
+  success: boolean;
+  data: {
+    reply?: string;
+    message?: string;
+    [key: string]: unknown;
+  };
+}
+
 interface RecipesResponse {
   success: boolean;
   data: {
@@ -61,4 +82,14 @@ export const recipesApi = {
   // Delete recipe
   delete: (id: string, token: string) =>
     api.delete<{ success: boolean }>(`/recipes/${id}`, token),
+
+  // Chat about a recipe
+  chat: (
+    id: string,
+    body: {
+      message: string;
+      context: RecipeChatContext;
+      history?: RecipeChatMessage[];
+    }
+  ) => api.post<RecipeChatResponse>(`/recipes/${id}/chat`, body),
 };

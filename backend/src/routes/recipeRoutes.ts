@@ -6,14 +6,13 @@ const router = Router();
 
 // Public routes
 router.get('/', recipeController.getRecipes);
-router.get('/:id', recipeController.getRecipeById);
-
-// Generate recipes (optional auth - saves to user if authenticated)
 router.post('/generate', optionalAuth, recipeController.generateRecipes);
+router.post('/:id/chat', recipeController.chatAboutRecipe);
 
 // Protected routes
 router.get('/user/me', authMiddleware, recipeController.getUserRecipes);
 router.post('/', authMiddleware, recipeController.createRecipe);
 router.delete('/:id', authMiddleware, recipeController.deleteRecipe);
+router.get('/:id', recipeController.getRecipeById);
 
 export default router;

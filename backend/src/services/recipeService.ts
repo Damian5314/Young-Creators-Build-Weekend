@@ -1,5 +1,6 @@
 import { supabase } from '../config/supabase';
-import { Recipe, PaginationParams } from '../types';
+import { env } from '../config/env';
+import { Recipe, PaginationParams, RecipeChatRequest } from '../types';
 import { AppError } from '../middleware/errorHandler';
 import { generateRecipesWithAI } from './aiService';
 
@@ -120,4 +121,38 @@ export async function deleteRecipe(id: string, userId: string) {
   }
 
   return { success: true };
+}
+
+export async function chatAboutRecipe(recipeId: string, payload: RecipeChatRequest) {
+  if (!env.RECIPE_CHAT_WEBHOOK_URL) {
+    throw new AppError('Recipe chat webhook is not configured', 500);
+  }
+
+  if (!payload.context?.title || !payload.context?.ingredients?.length) {
+    throw new AppError('Recipe context is incomplete', 400);
+  }
+
+  const response = await fetch(env.RECIPE_CHAT_WEBHOOK_URL, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      recipeId,
+      ...payload,
+    }),
+  });
+
+  if (!response.ok) {
+    const errorText = await response.text();
+    console.error('Recipe chat webhook error:', response.status, errorText);
+    throw new AppError('Failed to fetch AI chef response', 502);
+  }
+
+  try {
+    return await response.json();
+  } catch (err) {
+    console.error('Recipe chat response parse error:', err);
+    throw new AppError('Invalid response from AI chef', 502);
+  }
 }

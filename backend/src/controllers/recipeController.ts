@@ -1,5 +1,5 @@
 import { Request, Response, NextFunction } from 'express';
-import { AuthenticatedRequest, GenerateRecipesRequest } from '../types';
+import { AuthenticatedRequest, GenerateRecipesRequest, RecipeChatRequest } from '../types';
 import * as recipeService from '../services/recipeService';
 
 export async function getRecipes(
@@ -100,6 +100,32 @@ export async function deleteRecipe(
     await recipeService.deleteRecipe(id, req.user!.id);
 
     res.json({ success: true, message: 'Recipe deleted' });
+  } catch (error) {
+    next(error);
+  }
+}
+
+export async function chatAboutRecipe(
+  req: Request<{ id: string }, {}, RecipeChatRequest>,
+  res: Response,
+  next: NextFunction
+): Promise<void> {
+  try {
+    const { id } = req.params;
+    const { message, context, history } = req.body;
+
+    if (!message?.trim()) {
+      res.status(400).json({ success: false, error: 'Message is required' });
+      return;
+    }
+
+    const response = await recipeService.chatAboutRecipe(id, {
+      message: message.trim(),
+      context,
+      history,
+    });
+
+    res.json({ success: true, data: response });
   } catch (error) {
     next(error);
   }

@@ -20,6 +20,7 @@ export const env = {
   // AI Services
   OPENAI_API_KEY: process.env.OPENAI_API_KEY || '',
   LOVABLE_API_KEY: process.env.LOVABLE_API_KEY || '',
+  RECIPE_CHAT_WEBHOOK_URL: process.env.N8N_RECIPE_CHAT_WEBHOOK_URL || process.env.RECIPE_CHAT_WEBHOOK_URL || '',
 
   // Frontend URL for CORS
   FRONTEND_URL: process.env.FRONTEND_URL || 'http://localhost:5173',
