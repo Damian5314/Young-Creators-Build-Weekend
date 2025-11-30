@@ -8,6 +8,7 @@ import {
   ChefHat,
   Bookmark,
   MessageCircle,
+  Loader2,
 } from "lucide-react";
 import { Meal, MealTag } from "@/lib/types";
 import { cn } from "@/lib/utils";
@@ -23,6 +24,7 @@ interface MealDetailModalProps {
   isFavorite: boolean;
   onToggleFavorite: (id: string) => void;
   onSave: () => void;
+  isSaving?: boolean;
 }
 
 type ChatMessage = RecipeChatMessage & { id: string };
@@ -47,6 +49,7 @@ export function MealDetailModal({
   isFavorite,
   onToggleFavorite,
   onSave,
+  isSaving,
 }: MealDetailModalProps) {
   if (!meal) return null;
 
@@ -271,10 +274,11 @@ export function MealDetailModal({
                   </button>
                   <button
                     onClick={onSave}
+                    disabled={isSaving}
                     aria-label="Save to collection"
-                    className="h-10 w-10 rounded-full bg-secondary flex items-center justify-center text-secondary-foreground hover:bg-secondary/80 transition-all"
+                    className="h-10 w-10 rounded-full bg-secondary flex items-center justify-center text-secondary-foreground hover:bg-secondary/80 transition-all disabled:opacity-50"
                   >
-                    <Bookmark className="h-5 w-5" />
+                    {isSaving ? <Loader2 className="h-5 w-5 animate-spin" /> : <Bookmark className="h-5 w-5" />}
                   </button>
                   <button
                     onClick={handleShare}

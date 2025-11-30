@@ -133,11 +133,12 @@ export default function ProfilePage() {
         setMyVideos(mappedVideos as UserVideo[]);
       }
     } else {
-      // For regular users: fetch from recipes table
+      // For regular users: fetch from recipes table - only user-created videos (not saved from feed)
       const { data, error } = await supabase
         .from('recipes')
         .select('*')
         .eq('user_id', user.id)
+        .eq('source', 'USER')
         .not('video_url', 'is', null)
         .order('created_at', { ascending: false });
 
@@ -160,12 +161,48 @@ export default function ProfilePage() {
     if (data) {
       const collectionsWithCounts = await Promise.all(
         data.map(async (col) => {
-          const { count } = await supabase
+          // Get all items for this collection
+          const { data: items } = await supabase
             .from('collection_items')
-            .select('*', { count: 'exact', head: true })
+            .select('item_id, item_type')
             .eq('collection_id', col.id);
 
-          return { ...col, itemCount: count || 0 } as CollectionWithItems;
+          if (!items || items.length === 0) {
+            return { ...col, itemCount: 0 } as CollectionWithItems;
+          }
+
+          // Count only items that actually exist in their respective tables
+          let validCount = 0;
+
+          const videoIds = items.filter((i) => i.item_type === 'VIDEO').map((i) => i.item_id);
+          const recipeIds = items.filter((i) => i.item_type === 'RECIPE').map((i) => i.item_id);
+          const restaurantIds = items.filter((i) => i.item_type === 'RESTAURANT').map((i) => i.item_id);
+
+          if (videoIds.length > 0) {
+            const { count } = await supabase
+              .from('videos')
+              .select('*', { count: 'exact', head: true })
+              .in('id', videoIds);
+            validCount += count || 0;
+          }
+
+          if (recipeIds.length > 0) {
+            const { count } = await supabase
+              .from('recipes')
+              .select('*', { count: 'exact', head: true })
+              .in('id', recipeIds);
+            validCount += count || 0;
+          }
+
+          if (restaurantIds.length > 0) {
+            const { count } = await supabase
+              .from('restaurants')
+              .select('*', { count: 'exact', head: true })
+              .in('id', restaurantIds);
+            validCount += count || 0;
+          }
+
+          return { ...col, itemCount: validCount } as CollectionWithItems;
         })
       );
 
@@ -211,34 +248,44 @@ export default function ProfilePage() {
       .select('*')
       .eq('collection_id', collection.id);
 
+    console.log('Collection items from DB:', items);
+
     if (items && items.length > 0) {
       const videoIds = items.filter((i) => i.item_type === 'VIDEO').map((i) => i.item_id);
       const recipeIds = items.filter((i) => i.item_type === 'RECIPE').map((i) => i.item_id);
       const restaurantIds = items.filter((i) => i.item_type === 'RESTAURANT').map((i) => i.item_id);
 
+      console.log('Video IDs:', videoIds);
+      console.log('Recipe IDs:', recipeIds);
+      console.log('Restaurant IDs:', restaurantIds);
+
       const results: any[] = [];
 
       if (videoIds.length > 0) {
-        const { data: videos } = await supabase
+        const { data: videos, error: videoError } = await supabase
           .from('videos')
           .select('*, restaurant:restaurants(*)')
           .in('id', videoIds);
+        console.log('Videos found:', videos, 'Error:', videoError);
         if (videos) results.push(...videos.map((v) => ({ ...v, _type: 'VIDEO' })));
       }
 
       if (recipeIds.length > 0) {
-        const { data: recipes } = await supabase.from('recipes').select('*').in('id', recipeIds);
+        const { data: recipes, error: recipeError } = await supabase.from('recipes').select('*').in('id', recipeIds);
+        console.log('Recipes found:', recipes, 'Error:', recipeError);
         if (recipes) results.push(...recipes.map((r) => ({ ...r, _type: 'RECIPE' })));
       }
 
       if (restaurantIds.length > 0) {
-        const { data: restaurants } = await supabase
+        const { data: restaurants, error: restaurantError } = await supabase
           .from('restaurants')
           .select('*')
           .in('id', restaurantIds);
+        console.log('Restaurants found:', restaurants, 'Error:', restaurantError);
         if (restaurants) results.push(...restaurants.map((r) => ({ ...r, _type: 'RESTAURANT' })));
       }
 
+      console.log('Final results:', results);
       setCollectionItems(results);
     } else {
       setCollectionItems([]);
@@ -656,7 +703,7 @@ export default function ProfilePage() {
           <div className="flex items-center justify-between mb-4">
             <h3 className="font-semibold text-white flex items-center gap-2">
               <Video className="h-4 w-4" style={{ color: '#fd6159' }} />
-              Mijn Video's
+              Mijn Uploads
               <span className="text-[10px] bg-white/10 px-1.5 py-0.5 rounded-full text-zinc-400">
                 {myVideos.length}
               </span>

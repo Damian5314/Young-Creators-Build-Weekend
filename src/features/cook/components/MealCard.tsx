@@ -1,5 +1,5 @@
 import { motion } from 'framer-motion';
-import { Heart, Share2, Clock, ChefHat, Bookmark } from 'lucide-react';
+import { Heart, Share2, Clock, ChefHat, Bookmark, Loader2 } from 'lucide-react';
 import { Meal, MealTag } from '@/lib/types';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
@@ -11,6 +11,7 @@ interface MealCardProps {
   onTagClick: (tag: MealTag) => void;
   onClick: () => void;
   onSave: () => void;
+  isSaving?: boolean;
 }
 
 const tagLabels: Record<MealTag, string> = {
@@ -26,7 +27,7 @@ const tagLabels: Record<MealTag, string> = {
   healthy: 'Healthy'
 };
 
-export function MealCard({ meal, isFavorite, onToggleFavorite, onTagClick, onClick, onSave }: MealCardProps) {
+export function MealCard({ meal, isFavorite, onToggleFavorite, onTagClick, onClick, onSave, isSaving }: MealCardProps) {
   const handleShare = async (e: React.MouseEvent) => {
     e.stopPropagation();
 
@@ -138,12 +139,13 @@ export function MealCard({ meal, isFavorite, onToggleFavorite, onTagClick, onCli
             <button
               onClick={(e) => {
                 e.stopPropagation();
-                onSave();
+                if (!isSaving) onSave();
               }}
+              disabled={isSaving}
               aria-label="Save to collection"
-              className="h-10 w-10 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center text-white hover:bg-white/30 transition-all"
+              className="h-10 w-10 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center text-white hover:bg-white/30 transition-all disabled:opacity-50"
             >
-              <Bookmark className="h-5 w-5" />
+              {isSaving ? <Loader2 className="h-5 w-5 animate-spin" /> : <Bookmark className="h-5 w-5" />}
             </button>
             <button
               onClick={handleShare}
