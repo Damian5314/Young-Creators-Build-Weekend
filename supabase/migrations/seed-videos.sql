@@ -1,8 +1,7 @@
--- Seed script voor videos en Jaffa restaurant
+-- Seed script voor videos en restaurants
 -- Voer dit uit in de Supabase SQL Editor
 
--- Eerst: Maak het Jaffa restaurant aan
--- We gebruiken een dummy owner_id (kan later aangepast worden naar een echte owner)
+-- Voeg Ashoka restaurant toe
 INSERT INTO public.restaurants (
     name,
     description,
@@ -17,78 +16,21 @@ INSERT INTO public.restaurants (
     opening_hours,
     image_url
 ) VALUES (
-    'Jaffa',
-    'Authentieke Israëlische shoarma en falafel',
-    'Javastraat 100',
+    'Ashoka',
+    'Authentiek Indiaas restaurant in het hart van Amsterdam | Rating: 4.6 (3456 reviews) | Tel: +31 20 221 0446 | www.ashokarestaurant.nl',
+    'Spuistraat 3G',
     'Amsterdam',
-    52.3676,
-    4.9041,
-    ARRAY['Middle Eastern', 'Israeli', 'Mediterranean'],
-    true,
+    52.3738,
+    4.8910,
+    ARRAY['Indian', 'Asian'],
+    false,
     2,
-    4.5,
-    'Ma-Zo: 12:00-22:00',
-    'https://images.unsplash.com/photo-1599487488170-d11ec9c172f0?w=800'
-) ON CONFLICT DO NOTHING
-RETURNING id;
+    4.6,
+    'Ma-Zo: 12:00-23:00',
+    'https://images.unsplash.com/photo-1585937421612-70a008356fbe?w=800'
+) ON CONFLICT DO NOTHING;
 
--- Voeg de Jaffa video toe aan de videos tabel
--- Let op: je moet de restaurant_id van Jaffa gebruiken
--- Voer eerst de query hieronder uit om het ID te krijgen:
--- SELECT id FROM public.restaurants WHERE name = 'Jaffa';
-
--- Dan voer je deze INSERT uit met het juiste restaurant_id:
-/*
-INSERT INTO public.videos (
-    restaurant_id,
-    title,
-    description,
-    video_url,
-    tags,
-    like_count,
-    view_count
-) VALUES (
-    '<JAFFA_RESTAURANT_ID_HIER>',
-    'Jaffa Shoarma',
-    'Heerlijke shoarma van Jaffa',
-    '/videos/restaurants/ssstik.io_jaffashoarma_1764437624613.mp4',
-    ARRAY['shoarma', 'halal', 'amsterdam'],
-    0,
-    0
-);
-*/
-
--- Voor nu gebruiken we een andere aanpak met een subquery:
-DO $$
-DECLARE
-    jaffa_id UUID;
-BEGIN
-    -- Haal het Jaffa restaurant ID op
-    SELECT id INTO jaffa_id FROM public.restaurants WHERE name = 'Jaffa' LIMIT 1;
-
-    -- Als Jaffa bestaat, voeg dan de video toe
-    IF jaffa_id IS NOT NULL THEN
-        INSERT INTO public.videos (
-            restaurant_id,
-            title,
-            description,
-            video_url,
-            tags,
-            like_count,
-            view_count
-        ) VALUES (
-            jaffa_id,
-            'Jaffa Shoarma',
-            'Heerlijke shoarma van Jaffa',
-            '/videos/restaurants/ssstik.io_jaffashoarma_1764437624613.mp4',
-            ARRAY['shoarma', 'halal', 'amsterdam'],
-            0,
-            0
-        ) ON CONFLICT DO NOTHING;
-    END IF;
-END $$;
-
--- Voeg Soufflé Café restaurant toe
+-- Voeg Omelegg City Centre restaurant toe
 INSERT INTO public.restaurants (
     name,
     description,
@@ -103,21 +45,50 @@ INSERT INTO public.restaurants (
     opening_hours,
     image_url
 ) VALUES (
-    'Soufflé Café',
-    'Gespecialiseerd in heerlijke soufflés en modern Frans gebak',
-    'Kerkstraat 45',
+    'Omelegg City Centre',
+    'Breakfast restaurant in Amsterdam | Rating: 4.6 (5907 reviews) | Tel: +31 20 233 2406 | www.omelegg.com',
+    'Nieuwebrugsteeg 24',
     'Amsterdam',
-    52.3648,
-    4.8830,
-    ARRAY['French', 'Dessert', 'Café'],
+    52.3719,
+    4.8945,
+    ARRAY['Breakfast', 'Brunch', 'European'],
+    false,
+    2,
+    4.6,
+    'Ma-Zo: 08:00-16:00',
+    'https://images.unsplash.com/photo-1533089860892-a7c6f0a88666?w=800'
+) ON CONFLICT DO NOTHING;
+
+-- Voeg The Pantry restaurant toe
+INSERT INTO public.restaurants (
+    name,
+    description,
+    address,
+    city,
+    latitude,
+    longitude,
+    cuisine_types,
+    halal,
+    price_level,
+    average_rating,
+    opening_hours,
+    image_url
+) VALUES (
+    'The Pantry',
+    'Traditional Dutch restaurant | Rating: 4.7 (8696 reviews) | Tel: +31 20 620 0922 | www.thepantry.nl',
+    'Leidsekruisstraat 21',
+    'Amsterdam',
+    52.3644,
+    4.8826,
+    ARRAY['Dutch', 'European', 'Traditional'],
     false,
     3,
-    4.6,
-    'Ma-Zo: 09:00-18:00',
-    'https://images.unsplash.com/photo-1555507036-ab1f4038808a?w=800'
+    4.7,
+    'Ma-Zo: 12:00-22:00',
+    'https://images.unsplash.com/photo-1414235077428-338989a2e8c0?w=800'
 ) ON CONFLICT DO NOTHING;
 
--- Voeg Happy Italy restaurant toe
+-- Voeg Restaurant Olijfje toe
 INSERT INTO public.restaurants (
     name,
     description,
@@ -132,32 +103,36 @@ INSERT INTO public.restaurants (
     opening_hours,
     image_url
 ) VALUES (
-    'Happy Italy',
-    'Italiaanse gerechten in een gezellige sfeer',
-    'Nieuwendijk 20',
+    'Restaurant Olijfje',
+    'Mediterranean restaurant | Rating: 4.7 (3911 reviews) | Tel: +31 20 330 4444 | www.restaurantolijfje.nl',
+    'Valkenburgerstraat 223D',
     'Amsterdam',
-    52.3750,
-    4.8930,
-    ARRAY['Italian', 'Pizza', 'Pasta'],
+    52.3688,
+    4.9080,
+    ARRAY['Mediterranean', 'European', 'International'],
     false,
-    2,
-    4.3,
-    'Ma-Zo: 11:00-22:00',
-    'https://images.unsplash.com/photo-1595295333158-4742f28fbd85?w=800'
+    3,
+    4.7,
+    'Ma-Zo: 17:00-23:00',
+    'https://images.unsplash.com/photo-1544025162-d76694265947?w=800'
 ) ON CONFLICT DO NOTHING;
 
--- Voeg de video's toe voor de nieuwe restaurants
+-- Voeg video's toe voor alle restaurants
 DO $$
 DECLARE
-    souffle_id UUID;
-    happy_italy_id UUID;
+    ashoka_id UUID;
+    omelegg_id UUID;
+    pantry_id UUID;
+    olijfje_id UUID;
 BEGIN
     -- Haal de restaurant IDs op
-    SELECT id INTO souffle_id FROM public.restaurants WHERE name = 'Soufflé Café' LIMIT 1;
-    SELECT id INTO happy_italy_id FROM public.restaurants WHERE name = 'Happy Italy' LIMIT 1;
+    SELECT id INTO ashoka_id FROM public.restaurants WHERE name = 'Ashoka' LIMIT 1;
+    SELECT id INTO omelegg_id FROM public.restaurants WHERE name = 'Omelegg City Centre' LIMIT 1;
+    SELECT id INTO pantry_id FROM public.restaurants WHERE name = 'The Pantry' LIMIT 1;
+    SELECT id INTO olijfje_id FROM public.restaurants WHERE name = 'Restaurant Olijfje' LIMIT 1;
 
-    -- Voeg Soufflé Café video toe
-    IF souffle_id IS NOT NULL THEN
+    -- Voeg Ashoka video toe
+    IF ashoka_id IS NOT NULL THEN
         INSERT INTO public.videos (
             restaurant_id,
             title,
@@ -167,18 +142,18 @@ BEGIN
             like_count,
             view_count
         ) VALUES (
-            souffle_id,
-            'Soufflé Café Specialiteiten',
-            'Heerlijke soufflés bij Soufflé Café',
-            '/videos/restaurants/snaptik_soufflecafe7532826737416162593_v2.mp4',
-            ARRAY['souffle', 'dessert', 'amsterdam', 'french'],
+            ashoka_id,
+            'Ashoka Amsterdam',
+            'Heerlijke Indiaas gerechten bij Ashoka',
+            '/videos/restaurants/AshokaAmsterdam.mp4',
+            ARRAY['indian', 'curry', 'amsterdam', 'spicy'],
             0,
             0
         ) ON CONFLICT DO NOTHING;
     END IF;
 
-    -- Voeg Happy Italy video toe
-    IF happy_italy_id IS NOT NULL THEN
+    -- Voeg Omelegg video toe
+    IF omelegg_id IS NOT NULL THEN
         INSERT INTO public.videos (
             restaurant_id,
             title,
@@ -188,11 +163,53 @@ BEGIN
             like_count,
             view_count
         ) VALUES (
-            happy_italy_id,
-            'Happy Italy Gerechten',
-            'Lekkere Italiaanse gerechten bij Happy Italy',
-            '/videos/restaurants/ssstik.io_happyitalynl_1764437549266.mp4',
-            ARRAY['italian', 'pasta', 'pizza', 'amsterdam'],
+            omelegg_id,
+            'Omelegg City Centre',
+            'Heerlijk ontbijt bij Omelegg',
+            '/videos/restaurants/omeleggamsterdam.mp4',
+            ARRAY['breakfast', 'brunch', 'amsterdam', 'eggs'],
+            0,
+            0
+        ) ON CONFLICT DO NOTHING;
+    END IF;
+
+    -- Voeg The Pantry video toe
+    IF pantry_id IS NOT NULL THEN
+        INSERT INTO public.videos (
+            restaurant_id,
+            title,
+            description,
+            video_url,
+            tags,
+            like_count,
+            view_count
+        ) VALUES (
+            pantry_id,
+            'The Pantry',
+            'Authentieke Nederlandse gerechten bij The Pantry',
+            '/videos/restaurants/thepantryamsterdam.mp4',
+            ARRAY['dutch', 'traditional', 'amsterdam', 'local'],
+            0,
+            0
+        ) ON CONFLICT DO NOTHING;
+    END IF;
+
+    -- Voeg Restaurant Olijfje video toe
+    IF olijfje_id IS NOT NULL THEN
+        INSERT INTO public.videos (
+            restaurant_id,
+            title,
+            description,
+            video_url,
+            tags,
+            like_count,
+            view_count
+        ) VALUES (
+            olijfje_id,
+            'Restaurant Olijfje',
+            'Mediterrane gerechten bij Restaurant Olijfje',
+            '/videos/restaurants/olijfjeamsterdam.mp4',
+            ARRAY['mediterranean', 'seafood', 'amsterdam', 'fresh'],
             0,
             0
         ) ON CONFLICT DO NOTHING;
@@ -233,6 +250,6 @@ INSERT INTO public.recipes (
 ) ON CONFLICT DO NOTHING;
 
 -- Controleer of alles is toegevoegd:
-SELECT 'Restaurants:', COUNT(*) FROM public.restaurants WHERE name IN ('Jaffa', 'Soufflé Café', 'Happy Italy');
-SELECT 'Videos:', COUNT(*) FROM public.videos WHERE title IN ('Jaffa Shoarma', 'Soufflé Café Specialiteiten', 'Happy Italy Gerechten');
+SELECT 'Restaurants:', COUNT(*) FROM public.restaurants WHERE name IN ('Ashoka', 'Omelegg City Centre', 'The Pantry', 'Restaurant Olijfje');
+SELECT 'Videos:', COUNT(*) FROM public.videos WHERE title IN ('Ashoka Amsterdam', 'Omelegg City Centre', 'The Pantry', 'Restaurant Olijfje');
 SELECT 'Recipes:', COUNT(*) FROM public.recipes WHERE title IN ('Pasta Carbonara', 'Chocolate Chip Cookies');
