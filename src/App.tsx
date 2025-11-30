@@ -16,6 +16,7 @@ import {
   OnboardingPage,
   RestaurantDetailPage,
   DashboardPage,
+  UploadPage,
 } from '@/features';
 
 // Not Found page
@@ -39,6 +40,7 @@ const App = () => (
             <Route path="/cook" element={<CookPage />} />
             <Route path="/collections" element={<CollectionsPage />} />
             <Route path="/profile" element={<ProfilePage />} />
+            <Route path="/upload" element={<UploadPage />} />
 
             {/* Detail pages */}
             <Route path="/restaurant/:id" element={<RestaurantDetailPage />} />
