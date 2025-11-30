@@ -2,10 +2,14 @@ import { useState } from 'react';
 import { motion } from 'framer-motion';
 import { useMeals } from '@/hooks/useMeals';
 import { useFavorites } from '@/hooks/useFavorites';
+import { useAuth } from '@/shared/hooks';
 import { MealCard } from './MealCard';
 import { MealDetailModal } from './MealDetailModal';
+import { SaveToCollectionModal } from '@/features/home/components';
 import { Meal, MealTag } from '@/lib/types';
 import { cn } from '@/lib/utils';
+import { toast } from 'sonner';
+import { useNavigate } from 'react-router-dom';
 
 const filterLabels: Record<MealTag | 'all', string> = {
   all: 'All',
@@ -24,8 +28,14 @@ const filterLabels: Record<MealTag | 'all', string> = {
 export function FoodSwipeFeed() {
   const { filteredMeals, activeFilter, setFilter, availableFilters } = useMeals();
   const { isFavorite, toggleFavorite } = useFavorites();
+  const { user } = useAuth();
+  const navigate = useNavigate();
   const [selectedMeal, setSelectedMeal] = useState<Meal | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [saveModal, setSaveModal] = useState<{ open: boolean; mealId: string | null }>({
+    open: false,
+    mealId: null,
+  });
 
   const handleMealClick = (meal: Meal) => {
     setSelectedMeal(meal);
@@ -39,6 +49,15 @@ export function FoodSwipeFeed() {
 
   const handleTagClick = (tag: MealTag) => {
     setFilter(tag);
+  };
+
+  const handleSave = (mealId: string) => {
+    if (!user) {
+      toast.error('Please sign in to save');
+      navigate('/auth');
+      return;
+    }
+    setSaveModal({ open: true, mealId });
   };
 
   return (
@@ -92,6 +111,7 @@ export function FoodSwipeFeed() {
                 onToggleFavorite={toggleFavorite}
                 onTagClick={handleTagClick}
                 onClick={() => handleMealClick(meal)}
+                onSave={() => handleSave(meal.id)}
               />
             </motion.div>
           ))
@@ -105,6 +125,15 @@ export function FoodSwipeFeed() {
         onClose={handleCloseModal}
         isFavorite={selectedMeal ? isFavorite(selectedMeal.id) : false}
         onToggleFavorite={toggleFavorite}
+        onSave={() => selectedMeal && handleSave(selectedMeal.id)}
+      />
+
+      {/* Save to Collection Modal */}
+      <SaveToCollectionModal
+        isOpen={saveModal.open}
+        onClose={() => setSaveModal({ open: false, mealId: null })}
+        itemId={saveModal.mealId || ''}
+        itemType="RECIPE"
       />
     </div>
   );

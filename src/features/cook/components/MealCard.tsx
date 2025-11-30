@@ -1,5 +1,5 @@
 import { motion } from 'framer-motion';
-import { Heart, Share2, Clock, ChefHat } from 'lucide-react';
+import { Heart, Share2, Clock, ChefHat, Bookmark } from 'lucide-react';
 import { Meal, MealTag } from '@/lib/types';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
@@ -10,6 +10,7 @@ interface MealCardProps {
   onToggleFavorite: (id: string) => void;
   onTagClick: (tag: MealTag) => void;
   onClick: () => void;
+  onSave: () => void;
 }
 
 const tagLabels: Record<MealTag, string> = {
@@ -25,7 +26,7 @@ const tagLabels: Record<MealTag, string> = {
   healthy: 'Healthy'
 };
 
-export function MealCard({ meal, isFavorite, onToggleFavorite, onTagClick, onClick }: MealCardProps) {
+export function MealCard({ meal, isFavorite, onToggleFavorite, onTagClick, onClick, onSave }: MealCardProps) {
   const handleShare = async (e: React.MouseEvent) => {
     e.stopPropagation();
 
@@ -133,6 +134,16 @@ export function MealCard({ meal, isFavorite, onToggleFavorite, onTagClick, onCli
               )}
             >
               <Heart className={cn("h-5 w-5", isFavorite && "fill-current")} />
+            </button>
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                onSave();
+              }}
+              aria-label="Save to collection"
+              className="h-10 w-10 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center text-white hover:bg-white/30 transition-all"
+            >
+              <Bookmark className="h-5 w-5" />
             </button>
             <button
               onClick={handleShare}

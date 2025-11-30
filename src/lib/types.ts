@@ -17,7 +17,7 @@ export interface Meal {
 // Mock data for the FoodSwipe feed
 export const mockMeals: Meal[] = [
   {
-    id: '1',
+    id: 'a1b2c3d4-e5f6-7890-abcd-ef1234567801',
     name: 'Spicy Ramen',
     imageUrl: 'https://images.unsplash.com/photo-1569718212165-3a8278d5f624?w=800&q=80',
     videoUrl: 'https://www.youtube.com/watch?v=_eSfYBT_S_M',
@@ -45,7 +45,7 @@ export const mockMeals: Meal[] = [
     difficulty: 'medium'
   },
   {
-    id: '2',
+    id: 'a1b2c3d4-e5f6-7890-abcd-ef1234567802',
     name: 'Creamy Carbonara',
     imageUrl: 'https://images.unsplash.com/photo-1612874742237-6526221588e3?w=800&q=80',
     videoUrl: 'https://www.youtube.com/watch?v=3AAdKl1UYZs',
@@ -72,7 +72,7 @@ export const mockMeals: Meal[] = [
     difficulty: 'medium'
   },
   {
-    id: '3',
+    id: 'a1b2c3d4-e5f6-7890-abcd-ef1234567803',
     name: 'Thai Green Curry',
     imageUrl: 'https://images.unsplash.com/photo-1455619452474-d2be8b1e70cd?w=800&q=80',
     videoUrl: 'https://www.youtube.com/watch?v=LIbKVpBQKJI',
@@ -102,7 +102,7 @@ export const mockMeals: Meal[] = [
     difficulty: 'medium'
   },
   {
-    id: '4',
+    id: 'a1b2c3d4-e5f6-7890-abcd-ef1234567804',
     name: 'Avocado Toast',
     imageUrl: 'https://images.unsplash.com/photo-1541519227354-08fa5d50c44d?w=800&q=80',
     description: 'Simple yet delicious breakfast with creamy avocado on crispy toast, topped with eggs and seasonings.',
@@ -129,7 +129,7 @@ export const mockMeals: Meal[] = [
     difficulty: 'easy'
   },
   {
-    id: '5',
+    id: 'a1b2c3d4-e5f6-7890-abcd-ef1234567805',
     name: 'Beef Stir Fry',
     imageUrl: 'https://images.unsplash.com/photo-1603133872878-684f208fb84b?w=800&q=80',
     videoUrl: 'https://www.youtube.com/watch?v=A0oe-uSVpJk',
@@ -159,7 +159,7 @@ export const mockMeals: Meal[] = [
     difficulty: 'easy'
   },
   {
-    id: '6',
+    id: 'a1b2c3d4-e5f6-7890-abcd-ef1234567806',
     name: 'Vegan Buddha Bowl',
     imageUrl: 'https://images.unsplash.com/photo-1512621776951-a57141f2eefd?w=800&q=80',
     description: 'Nutritious and colorful bowl packed with grains, roasted vegetables, and tahini dressing.',
@@ -187,7 +187,7 @@ export const mockMeals: Meal[] = [
     difficulty: 'easy'
   },
   {
-    id: '7',
+    id: 'a1b2c3d4-e5f6-7890-abcd-ef1234567807',
     name: 'Chicken Tikka Masala',
     imageUrl: 'https://images.unsplash.com/photo-1565557623262-b51c2513a641?w=800&q=80',
     videoUrl: 'https://www.youtube.com/watch?v=a03U45jFxOI',
@@ -218,7 +218,7 @@ export const mockMeals: Meal[] = [
     difficulty: 'medium'
   },
   {
-    id: '8',
+    id: 'a1b2c3d4-e5f6-7890-abcd-ef1234567808',
     name: 'Margherita Pizza',
     imageUrl: 'https://images.unsplash.com/photo-1574071318508-1cdbab80d002?w=800&q=80',
     videoUrl: 'https://www.youtube.com/watch?v=1-SJGQ2HLp8',
@@ -246,7 +246,7 @@ export const mockMeals: Meal[] = [
     difficulty: 'medium'
   },
   {
-    id: '9',
+    id: 'a1b2c3d4-e5f6-7890-abcd-ef1234567809',
     name: 'Chocolate Lava Cake',
     imageUrl: 'https://images.unsplash.com/photo-1624353365286-3f8d62daad51?w=800&q=80',
     videoUrl: 'https://www.youtube.com/watch?v=YdHYEFBpc_o',
@@ -275,7 +275,7 @@ export const mockMeals: Meal[] = [
     difficulty: 'medium'
   },
   {
-    id: '10',
+    id: 'a1b2c3d4-e5f6-7890-abcd-ef1234567810',
     name: 'Greek Salad',
     imageUrl: 'https://images.unsplash.com/photo-1540189549336-e6e99c3679fe?w=800&q=80',
     description: 'Fresh and vibrant Mediterranean salad with crisp vegetables, olives, and feta cheese.',
@@ -304,7 +304,7 @@ export const mockMeals: Meal[] = [
     difficulty: 'easy'
   },
   {
-    id: '11',
+    id: 'a1b2c3d4-e5f6-7890-abcd-ef1234567811',
     name: 'Mushroom Risotto',
     imageUrl: 'https://images.unsplash.com/photo-1476124369491-e7addf5db371?w=800&q=80',
     videoUrl: 'https://www.youtube.com/watch?v=EBKO-QlOVt0',
@@ -335,7 +335,7 @@ export const mockMeals: Meal[] = [
     difficulty: 'hard'
   },
   {
-    id: '12',
+    id: 'a1b2c3d4-e5f6-7890-abcd-ef1234567812',
     name: 'Fish Tacos',
     imageUrl: 'https://images.unsplash.com/photo-1551504734-5ee1c4a1479b?w=800&q=80',
     description: 'Crispy beer-battered fish in soft tortillas with fresh slaw and chipotle mayo.',
@@ -364,7 +364,7 @@ export const mockMeals: Meal[] = [
     difficulty: 'medium'
   },
   {
-    id: '13',
+    id: 'a1b2c3d4-e5f6-7890-abcd-ef1234567813',
     name: 'Overnight Oats',
     imageUrl: 'https://images.unsplash.com/photo-1517673400267-0251440c45dc?w=800&q=80',
     description: 'No-cook breakfast prepared the night before. Creamy oats with endless topping possibilities.',
@@ -392,7 +392,7 @@ export const mockMeals: Meal[] = [
     difficulty: 'easy'
   },
   {
-    id: '14',
+    id: 'a1b2c3d4-e5f6-7890-abcd-ef1234567814',
     name: 'Pad Thai',
     imageUrl: 'https://images.unsplash.com/photo-1559314809-0d155014e29e?w=800&q=80',
     videoUrl: 'https://www.youtube.com/watch?v=c_jM7jRqmYo',
@@ -423,7 +423,7 @@ export const mockMeals: Meal[] = [
     difficulty: 'medium'
   },
   {
-    id: '15',
+    id: 'a1b2c3d4-e5f6-7890-abcd-ef1234567815',
     name: 'Tomato Soup',
     imageUrl: 'https://images.unsplash.com/photo-1547592166-23ac45744acd?w=800&q=80',
     description: 'Comforting homemade tomato soup, perfect with a grilled cheese sandwich.',

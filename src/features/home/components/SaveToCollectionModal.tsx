@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, Plus, Check, Folder } from 'lucide-react';
+import { X, Plus, Check, Folder, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { supabase } from '@/integrations/supabase/client';
@@ -30,33 +30,65 @@ export function SaveToCollectionModal({
 
   useEffect(() => {
     if (isOpen && user) {
+      // Reset state when modal opens with new item
+      setSavedIn([]);
       fetchCollections();
     }
-  }, [isOpen, user]);
+  }, [isOpen, user, itemId]);
+
+  // Reset collections when modal closes
+  useEffect(() => {
+    if (!isOpen) {
+      setNewName('');
+    }
+  }, [isOpen]);
 
   const fetchCollections = async () => {
-    if (!user) return;
+    if (!user) {
+      console.log('No user found, skipping fetch');
+      return;
+    }
 
     setLoading(true);
-    const { data: cols } = await supabase
-      .from('collections')
-      .select('*')
-      .eq('user_id', user.id)
-      .eq('type', itemType === 'RECIPE' ? 'RECIPE' : 'RESTAURANT');
 
-    if (cols) {
-      setCollections(cols as Collection[]);
+    try {
+      // Fetch ALL collections for the user (not filtered by type)
+      const { data: cols, error } = await supabase
+        .from('collections')
+        .select('*')
+        .eq('user_id', user.id)
+        .order('created_at', { ascending: false });
 
-      const { data: items } = await supabase
-        .from('collection_items')
-        .select('collection_id')
-        .eq('item_id', itemId);
+      console.log('Fetched collections:', cols, 'Error:', error);
 
-      if (items) {
-        setSavedIn(items.map((i) => i.collection_id));
+      if (error) {
+        console.error('Error fetching collections:', error);
+        toast.error('Could not load collections');
+        setLoading(false);
+        return;
       }
+
+      setCollections((cols || []) as Collection[]);
+
+      // Check which collections already have this item
+      if (itemId) {
+        const { data: items, error: itemsError } = await supabase
+          .from('collection_items')
+          .select('collection_id')
+          .eq('item_id', itemId);
+
+        console.log('Fetched collection items for', itemId, ':', items, 'Error:', itemsError);
+
+        if (items && !itemsError) {
+          setSavedIn(items.map((i) => i.collection_id));
+        }
+      }
+    } catch (err) {
+      console.error('Unexpected error:', err);
+      toast.error('Something went wrong');
+    } finally {
+      setLoading(false);
     }
-    setLoading(false);
   };
 
   const createCollection = async () => {
@@ -73,34 +105,60 @@ export function SaveToCollectionModal({
       .select()
       .single();
 
-    if (!error && data) {
-      setCollections([...collections, data as Collection]);
+    if (error) {
+      toast.error('Could not create collection');
+      setCreating(false);
+      return;
+    }
+
+    if (data) {
+      const newCollection = data as Collection;
+      setCollections([newCollection, ...collections]);
       setNewName('');
+      toast.success(`Collection "${newCollection.name}" created!`);
+
+      // Automatically add item to the new collection
+      if (itemId) {
+        await toggleCollection(newCollection.id);
+      }
     }
     setCreating(false);
   };
 
   const toggleCollection = async (collectionId: string) => {
-    if (!user) return;
+    if (!user || !itemId) return;
 
     const isInCollection = savedIn.includes(collectionId);
+    const collection = collections.find(c => c.id === collectionId);
 
     if (isInCollection) {
-      await supabase
+      const { error } = await supabase
         .from('collection_items')
         .delete()
         .eq('collection_id', collectionId)
         .eq('item_id', itemId);
 
+      if (error) {
+        toast.error('Could not remove from collection');
+        return;
+      }
+
       setSavedIn(savedIn.filter((id) => id !== collectionId));
+      toast.success(`Removed from "${collection?.name}"`);
     } else {
-      await supabase.from('collection_items').insert({
+      const { error } = await supabase.from('collection_items').insert({
         collection_id: collectionId,
         item_type: itemType,
         item_id: itemId,
       });
 
+      if (error) {
+        toast.error('Could not add to collection');
+        return;
+      }
+
       setSavedIn([...savedIn, collectionId]);
+      toast.success(`Added to "${collection?.name}"`);
     }
   };
 
@@ -131,42 +189,78 @@ export function SaveToCollectionModal({
               </Button>
             </div>
 
+            {/* Create new collection */}
             <div className="flex gap-2 mb-6">
               <Input
                 placeholder="New collection name..."
                 value={newName}
                 onChange={(e) => setNewName(e.target.value)}
+                onKeyDown={(e) => e.key === 'Enter' && createCollection()}
                 className="flex-1"
               />
               <Button onClick={createCollection} disabled={!newName.trim() || creating}>
-                <Plus className="h-4 w-4 mr-1" />
-                Create
+                {creating ? (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                ) : (
+                  <>
+                    <Plus className="h-4 w-4 mr-1" />
+                    Create
+                  </>
+                )}
               </Button>
             </div>
 
+            {/* Collections list */}
             <div className="space-y-2 max-h-64 overflow-y-auto custom-scrollbar">
               {loading ? (
-                <div className="text-center py-8 text-muted-foreground">Loading...</div>
+                <div className="flex items-center justify-center py-8 gap-2 text-muted-foreground">
+                  <Loader2 className="h-5 w-5 animate-spin" />
+                  <span>Loading collections...</span>
+                </div>
               ) : collections.length === 0 ? (
-                <div className="text-center py-8 text-muted-foreground">
-                  No collections yet. Create one above!
+                <div className="text-center py-8">
+                  <Folder className="h-12 w-12 mx-auto mb-3 text-muted-foreground/50" />
+                  <p className="text-muted-foreground font-medium">No collections yet</p>
+                  <p className="text-sm text-muted-foreground/70 mt-1">Create your first collection above!</p>
                 </div>
               ) : (
                 collections.map((collection) => (
                   <button
                     key={collection.id}
                     onClick={() => toggleCollection(collection.id)}
-                    className="w-full flex items-center gap-3 p-3 rounded-xl hover:bg-secondary/50 transition-colors"
+                    className={`w-full flex items-center gap-3 p-3 rounded-xl transition-colors ${
+                      savedIn.includes(collection.id)
+                        ? 'bg-primary/10 border border-primary/30'
+                        : 'hover:bg-secondary/50'
+                    }`}
                   >
-                    <div className="h-10 w-10 rounded-lg bg-secondary flex items-center justify-center">
-                      <Folder className="h-5 w-5 text-primary" />
+                    <div className={`h-10 w-10 rounded-lg flex items-center justify-center ${
+                      savedIn.includes(collection.id) ? 'bg-primary/20' : 'bg-secondary'
+                    }`}>
+                      <Folder className={`h-5 w-5 ${
+                        savedIn.includes(collection.id) ? 'text-primary' : 'text-muted-foreground'
+                      }`} />
                     </div>
-                    <span className="flex-1 text-left font-medium">{collection.name}</span>
-                    {savedIn.includes(collection.id) && <Check className="h-5 w-5 text-primary" />}
+                    <div className="flex-1 text-left">
+                      <span className="font-medium">{collection.name}</span>
+                      <p className="text-xs text-muted-foreground capitalize">{collection.type?.toLowerCase() || 'General'}</p>
+                    </div>
+                    {savedIn.includes(collection.id) && (
+                      <div className="h-6 w-6 rounded-full bg-primary flex items-center justify-center">
+                        <Check className="h-4 w-4 text-primary-foreground" />
+                      </div>
+                    )}
                   </button>
                 ))
               )}
             </div>
+
+            {/* Hint */}
+            {collections.length > 0 && (
+              <p className="text-xs text-center text-muted-foreground mt-4">
+                Tap a collection to add or remove this item
+              </p>
+            )}
           </motion.div>
         </motion.div>
       )}

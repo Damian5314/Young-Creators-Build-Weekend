@@ -1,5 +1,5 @@
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, Heart, Share2, Clock, ChefHat, ExternalLink, Play } from 'lucide-react';
+import { X, Heart, Share2, Clock, ChefHat, ExternalLink, Play, Bookmark } from 'lucide-react';
 import { Meal, MealTag } from '@/lib/types';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
@@ -11,6 +11,7 @@ interface MealDetailModalProps {
   onClose: () => void;
   isFavorite: boolean;
   onToggleFavorite: (id: string) => void;
+  onSave: () => void;
 }
 
 const tagLabels: Record<MealTag, string> = {
@@ -40,7 +41,8 @@ export function MealDetailModal({
   isOpen,
   onClose,
   isFavorite,
-  onToggleFavorite
+  onToggleFavorite,
+  onSave
 }: MealDetailModalProps) {
   if (!meal) return null;
 
@@ -161,6 +163,13 @@ export function MealDetailModal({
                     )}
                   >
                     <Heart className={cn("h-5 w-5", isFavorite && "fill-current")} />
+                  </button>
+                  <button
+                    onClick={onSave}
+                    aria-label="Save to collection"
+                    className="h-10 w-10 rounded-full bg-secondary flex items-center justify-center text-secondary-foreground hover:bg-secondary/80 transition-all"
+                  >
+                    <Bookmark className="h-5 w-5" />
                   </button>
                   <button
                     onClick={handleShare}

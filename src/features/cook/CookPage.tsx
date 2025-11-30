@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ChefHat, Sparkles, Loader2, BookmarkPlus, ChevronDown } from 'lucide-react';
+import { ChefHat, Sparkles, Loader2, BookmarkPlus, ChevronDown, Share2 } from 'lucide-react';
 import { AppLayout } from '@/shared/components';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
@@ -8,16 +8,28 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/shared/hooks';
 import { recipesApi, GeneratedRecipe } from '@/api';
 import { toast } from 'sonner';
+import { useNavigate } from 'react-router-dom';
 import { FoodSwipeFeed } from './components';
+import { SaveToCollectionModal, ShareModal } from '@/features/home/components';
 
 export default function CookPage() {
   const { user, getToken } = useAuth();
+  const navigate = useNavigate();
   const [inputValue, setInputValue] = useState('');
   const [mode, setMode] = useState<'ingredients' | 'meal'>('meal');
   const [loading, setLoading] = useState(false);
   const [recipes, setRecipes] = useState<GeneratedRecipe[]>([]);
   const [expandedRecipe, setExpandedRecipe] = useState<number | null>(0);
   const [savingRecipe, setSavingRecipe] = useState<number | null>(null);
+  const [savedRecipeIds, setSavedRecipeIds] = useState<Map<number, string>>(new Map());
+  const [saveModal, setSaveModal] = useState<{ open: boolean; recipeId: string | null }>({
+    open: false,
+    recipeId: null,
+  });
+  const [shareModal, setShareModal] = useState<{ open: boolean; recipeIndex: number | null }>({
+    open: false,
+    recipeIndex: null,
+  });
 
   const handleGenerate = async () => {
     if (!inputValue.trim()) {
@@ -51,27 +63,39 @@ export default function CookPage() {
   const saveRecipe = async (recipe: GeneratedRecipe, index: number) => {
     if (!user) {
       toast.error('Please sign in to save recipes');
+      navigate('/auth');
       return;
     }
 
     setSavingRecipe(index);
 
-    const { error } = await supabase.from('recipes').insert({
+    const { data, error } = await supabase.from('recipes').insert({
       user_id: user.id,
       title: recipe.title,
       description: recipe.description,
       ingredients: recipe.ingredients,
       steps: recipe.steps,
       source: 'AI',
-    });
+    }).select('id').single();
 
     if (error) {
       toast.error('Failed to save recipe');
-    } else {
-      toast.success('Recipe saved to your collection!');
+    } else if (data) {
+      setSavedRecipeIds(prev => new Map(prev).set(index, data.id));
+      toast.success('Recipe saved! Now add it to a collection.');
+      setSaveModal({ open: true, recipeId: data.id });
     }
 
     setSavingRecipe(null);
+  };
+
+  const handleSaveToCollection = (index: number) => {
+    const recipeId = savedRecipeIds.get(index);
+    if (recipeId) {
+      setSaveModal({ open: true, recipeId });
+    } else {
+      toast.error('Please save the recipe first');
+    }
   };
 
   return (
@@ -258,18 +282,37 @@ export default function CookPage() {
                                 </ol>
                               </div>
 
-                              <Button
-                                onClick={() => saveRecipe(recipe, index)}
-                                disabled={savingRecipe === index}
-                                className="w-full h-12"
-                              >
-                                {savingRecipe === index ? (
-                                  <Loader2 className="h-4 w-4 animate-spin mr-2" />
-                                ) : (
-                                  <BookmarkPlus className="h-4 w-4 mr-2" />
-                                )}
-                                Save to My Recipes
-                              </Button>
+                              <div className="grid grid-cols-2 gap-3">
+                                <Button
+                                  onClick={() => saveRecipe(recipe, index)}
+                                  disabled={savingRecipe === index || savedRecipeIds.has(index)}
+                                  className="h-12"
+                                >
+                                  {savingRecipe === index ? (
+                                    <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                                  ) : (
+                                    <BookmarkPlus className="h-4 w-4 mr-2" />
+                                  )}
+                                  {savedRecipeIds.has(index) ? 'Saved!' : 'Save'}
+                                </Button>
+                                <Button
+                                  variant="secondary"
+                                  onClick={() => setShareModal({ open: true, recipeIndex: index })}
+                                  className="h-12"
+                                >
+                                  <Share2 className="h-4 w-4 mr-2" />
+                                  Delen
+                                </Button>
+                              </div>
+                              {savedRecipeIds.has(index) && (
+                                <Button
+                                  variant="outline"
+                                  onClick={() => handleSaveToCollection(index)}
+                                  className="w-full h-10 mt-2"
+                                >
+                                  Add to Collection
+                                </Button>
+                              )}
                             </div>
                           </motion.div>
                         )}
@@ -282,6 +325,25 @@ export default function CookPage() {
           </>
         )}
       </div>
+
+      {/* Save to Collection Modal */}
+      <SaveToCollectionModal
+        isOpen={saveModal.open}
+        onClose={() => setSaveModal({ open: false, recipeId: null })}
+        itemId={saveModal.recipeId || ''}
+        itemType="RECIPE"
+      />
+
+      {/* Share Modal */}
+      {shareModal.recipeIndex !== null && (
+        <ShareModal
+          isOpen={shareModal.open}
+          onClose={() => setShareModal({ open: false, recipeIndex: null })}
+          itemId={savedRecipeIds.get(shareModal.recipeIndex) || `recipe-${shareModal.recipeIndex}`}
+          itemType="RECIPE"
+          itemName={recipes[shareModal.recipeIndex]?.title || ''}
+        />
+      )}
     </AppLayout>
   );
 }
