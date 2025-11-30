@@ -24,7 +24,7 @@ export function RecipeCard({
 }: RecipeCardProps) {
   const videoRef = useRef<HTMLVideoElement>(null);
   const [showHeart, setShowHeart] = useState(false);
-  const [isMuted, setIsMuted] = useState(false);
+  const [isMuted, setIsMuted] = useState(true);
 
   useEffect(() => {
     if (videoRef.current) {
@@ -69,7 +69,7 @@ export function RecipeCard({
             src={recipe.video_url}
             className="h-full w-full object-cover"
             loop
-            muted
+            muted={isMuted}
             playsInline
             poster={recipe.image_url || undefined}
           />
