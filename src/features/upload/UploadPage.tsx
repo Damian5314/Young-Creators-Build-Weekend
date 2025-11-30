@@ -184,6 +184,8 @@ export default function UploadPage() {
             source: 'USER',
             ingredients: [],
             steps: [],
+            like_count: 0,
+            view_count: 0,
           });
 
         if (error) {

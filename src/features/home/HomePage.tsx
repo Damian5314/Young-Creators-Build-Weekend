@@ -23,6 +23,7 @@ export default function HomePage() {
   const [likedVideos, setLikedVideos] = useState<Set<string>>(new Set());
   const [likedRecipes, setLikedRecipes] = useState<Set<string>>(new Set());
   const [activeTab, setActiveTab] = useState<'restaurants' | 'recipes'>('restaurants');
+  const [isMuted, setIsMuted] = useState(true);
 
   const containerRef = useRef<HTMLDivElement>(null);
   const recipeContainerRef = useRef<HTMLDivElement>(null);
@@ -97,7 +98,7 @@ export default function HomePage() {
       .from('recipes')
       .select('*')
       .not('video_url', 'is', null)
-      .order('like_count', { ascending: false })
+      .order('created_at', { ascending: false })
       .limit(20);
 
     if (!error && data) {
@@ -333,6 +334,8 @@ export default function HomePage() {
                   video={video}
                   isActive={index === activeIndex && activeTab === 'restaurants'}
                   isLiked={likedVideos.has(video.id)}
+                  isMuted={isMuted}
+                  onToggleMute={() => setIsMuted(!isMuted)}
                   onLike={() => handleLike(video.id)}
                   onSave={() => {
                     if (!user) {
@@ -392,6 +395,8 @@ export default function HomePage() {
                   recipe={recipe}
                   isActive={index === activeRecipeIndex && activeTab === 'recipes'}
                   isLiked={likedRecipes.has(recipe.id)}
+                  isMuted={isMuted}
+                  onToggleMute={() => setIsMuted(!isMuted)}
                   onLike={() => handleLikeRecipe(recipe.id)}
                   onSave={() => {
                     if (!user) {

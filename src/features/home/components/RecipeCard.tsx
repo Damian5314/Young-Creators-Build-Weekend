@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Heart, Bookmark, ChefHat, Share2, Clock, Users, Volume2, VolumeX } from 'lucide-react';
+import { Heart, Bookmark, ChefHat, Share2, Clock, Users, Volume2, VolumeX, Play } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Recipe } from '@/shared/types';
 import { cn } from '@/shared/utils';
@@ -9,6 +9,8 @@ interface RecipeCardProps {
   recipe: Recipe;
   isActive: boolean;
   isLiked: boolean;
+  isMuted: boolean;
+  onToggleMute: () => void;
   onLike: () => void;
   onSave: () => void;
   onShare: () => void;
@@ -18,23 +20,38 @@ export function RecipeCard({
   recipe,
   isActive,
   isLiked,
+  isMuted,
+  onToggleMute,
   onLike,
   onSave,
   onShare,
 }: RecipeCardProps) {
   const videoRef = useRef<HTMLVideoElement>(null);
   const [showHeart, setShowHeart] = useState(false);
-  const [isMuted, setIsMuted] = useState(true);
+  const [isPaused, setIsPaused] = useState(false);
 
   useEffect(() => {
     if (videoRef.current) {
-      if (isActive) {
+      if (isActive && !isPaused) {
         videoRef.current.play().catch(() => {});
       } else {
         videoRef.current.pause();
       }
     }
+  }, [isActive, isPaused]);
+
+  // Reset pause state when scrolling to a new video
+  useEffect(() => {
+    if (isActive) {
+      setIsPaused(false);
+    }
   }, [isActive]);
+
+  const togglePause = () => {
+    if (recipe.video_url) {
+      setIsPaused(!isPaused);
+    }
+  };
 
   // Set video to use device volume (volume = 1, not muted)
   useEffect(() => {
@@ -43,10 +60,6 @@ export function RecipeCard({
       videoRef.current.muted = isMuted;
     }
   }, [isMuted]);
-
-  const toggleMute = () => {
-    setIsMuted(!isMuted);
-  };
 
   const handleDoubleTap = () => {
     if (!isLiked) {
@@ -60,6 +73,7 @@ export function RecipeCard({
     <div
       className="relative h-[100dvh] w-full snap-start snap-always overflow-hidden bg-card"
       onDoubleClick={handleDoubleTap}
+      onClick={togglePause}
     >
       {/* Video/Image Background */}
       <div className="absolute inset-0">
@@ -85,6 +99,22 @@ export function RecipeCard({
       {/* Gradient Overlay */}
       <div className="video-overlay absolute inset-0" />
 
+      {/* Pause indicator */}
+      <AnimatePresence>
+        {isPaused && recipe.video_url && (
+          <motion.div
+            initial={{ opacity: 0, scale: 0.8 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.8 }}
+            className="absolute inset-0 flex items-center justify-center z-20 pointer-events-none"
+          >
+            <div className="h-20 w-20 rounded-full bg-black/50 flex items-center justify-center backdrop-blur-sm">
+              <Play className="h-10 w-10 text-white ml-1" fill="white" />
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       {/* Heart animation on double tap */}
       <AnimatePresence>
         {showHeart && (
@@ -100,7 +130,7 @@ export function RecipeCard({
       </AnimatePresence>
 
       {/* Right side action buttons */}
-      <div className="absolute right-3 bottom-32 flex flex-col items-center gap-4 z-10">
+      <div className="absolute right-3 bottom-32 flex flex-col items-center gap-4 z-10" onClick={(e) => e.stopPropagation()}>
         <div className="flex flex-col items-center gap-1">
           <Button
             variant="action"
@@ -125,7 +155,7 @@ export function RecipeCard({
       </div>
 
       {/* Bottom info section */}
-      <div className="absolute bottom-16 left-0 right-20 px-4 pb-4 z-10">
+      <div className="absolute bottom-16 left-0 right-20 px-4 pb-4 z-10" onClick={(e) => e.stopPropagation()}>
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -138,7 +168,7 @@ export function RecipeCard({
               <Button
                 variant="ghost"
                 size="icon"
-                onClick={toggleMute}
+                onClick={onToggleMute}
                 className="h-10 w-10 rounded-full bg-neutral-800/80 hover:bg-neutral-700 text-white backdrop-blur-sm"
               >
                 {isMuted ? <VolumeX className="h-5 w-5" /> : <Volume2 className="h-5 w-5" />}
