@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { User, MapPin, LogOut, ChevronRight, Store, Check, Loader2, Plus, X, Folder, Trash2, Play, UtensilsCrossed, FolderOpen } from 'lucide-react';
+import { User, MapPin, LogOut, ChevronRight, Store, Check, Loader2, Plus, X, Folder, Trash2, Play, UtensilsCrossed, FolderOpen, Video } from 'lucide-react';
 import { AppLayout } from '@/shared/components';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -9,9 +9,13 @@ import { useAuth } from '@/shared/hooks';
 import { DIETARY_OPTIONS } from '@/shared/constants';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
-import { Collection } from '@/shared/types';
+import { Collection, Recipe } from '@/shared/types';
 
 type CollectionTabType = 'recipes' | 'restaurants';
+
+interface UserVideo extends Recipe {
+  // Recipe already has video_url, we just filter for ones that have it
+}
 
 interface CollectionWithItems extends Collection {
   itemCount: number;
@@ -41,6 +45,12 @@ export default function ProfilePage() {
   const [collectionTab, setCollectionTab] = useState<CollectionTabType>('recipes');
   const [editMode, setEditMode] = useState(false);
   const [selectedItems, setSelectedItems] = useState<Set<string>>(new Set());
+
+  // My Videos state
+  const [myVideos, setMyVideos] = useState<UserVideo[]>([]);
+  const [loadingVideos, setLoadingVideos] = useState(true);
+  const [videoEditMode, setVideoEditMode] = useState(false);
+  const [selectedVideos, setSelectedVideos] = useState<Set<string>>(new Set());
 
   const isOwner = profile?.role === 'OWNER';
 
@@ -82,6 +92,61 @@ export default function ProfilePage() {
       setLoadingCollections(false);
     }
   }, [user]);
+
+  // Fetch my videos (depends on restaurantId for owners)
+  useEffect(() => {
+    if (user) {
+      // For owners, wait until restaurantId is loaded
+      if (isOwner && !restaurantId) {
+        return;
+      }
+      fetchMyVideos();
+    } else {
+      setLoadingVideos(false);
+    }
+  }, [user, isOwner, restaurantId]);
+
+  const fetchMyVideos = async () => {
+    if (!user) return;
+
+    if (isOwner && restaurantId) {
+      // For restaurant owners: fetch from videos table
+      const { data, error } = await supabase
+        .from('videos')
+        .select('*')
+        .eq('restaurant_id', restaurantId)
+        .order('created_at', { ascending: false });
+
+      if (!error && data) {
+        // Map videos to match the UserVideo interface
+        const mappedVideos = data.map((v) => ({
+          id: v.id,
+          title: v.title,
+          description: v.description,
+          video_url: v.video_url,
+          image_url: v.thumbnail_url,
+          like_count: v.like_count || 0,
+          view_count: v.view_count || 0,
+          source: 'USER' as const,
+          created_at: v.created_at,
+        }));
+        setMyVideos(mappedVideos as UserVideo[]);
+      }
+    } else {
+      // For regular users: fetch from recipes table
+      const { data, error } = await supabase
+        .from('recipes')
+        .select('*')
+        .eq('user_id', user.id)
+        .not('video_url', 'is', null)
+        .order('created_at', { ascending: false });
+
+      if (!error && data) {
+        setMyVideos(data as UserVideo[]);
+      }
+    }
+    setLoadingVideos(false);
+  };
 
   const fetchCollections = async () => {
     if (!user) return;
@@ -218,6 +283,32 @@ export default function ProfilePage() {
     setSelectedItems(new Set());
     setEditMode(false);
     toast.success(`${selectedItems.size} items verwijderd`);
+  };
+
+  // Video selection and deletion
+  const toggleVideoSelection = (videoId: string) => {
+    const newSelected = new Set(selectedVideos);
+    if (newSelected.has(videoId)) {
+      newSelected.delete(videoId);
+    } else {
+      newSelected.add(videoId);
+    }
+    setSelectedVideos(newSelected);
+  };
+
+  const deleteSelectedVideos = async () => {
+    if (selectedVideos.size === 0) return;
+
+    const table = isOwner ? 'videos' : 'recipes';
+
+    for (const videoId of selectedVideos) {
+      await supabase.from(table).delete().eq('id', videoId);
+    }
+
+    setMyVideos(myVideos.filter((v) => !selectedVideos.has(v.id)));
+    setSelectedVideos(new Set());
+    setVideoEditMode(false);
+    toast.success(`${selectedVideos.size} video('s) verwijderd`);
   };
 
   // Filter collections by tab
@@ -555,6 +646,165 @@ export default function ProfilePage() {
                     {collection.itemCount} {collection.itemCount === 1 ? 'item' : 'items'}
                   </p>
                 </motion.button>
+              ))}
+            </div>
+          )}
+        </div>
+
+        {/* My Videos section - Premium Dark UI */}
+        <div className="rounded-2xl bg-zinc-900/50 border border-white/5 p-4 mb-4">
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="font-semibold text-white flex items-center gap-2">
+              <Video className="h-4 w-4" style={{ color: '#fd6159' }} />
+              Mijn Video's
+              <span className="text-[10px] bg-white/10 px-1.5 py-0.5 rounded-full text-zinc-400">
+                {myVideos.length}
+              </span>
+            </h3>
+            <div className="flex items-center gap-2">
+              {myVideos.length > 0 && (
+                <motion.button
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                  onClick={() => {
+                    setVideoEditMode(!videoEditMode);
+                    setSelectedVideos(new Set());
+                  }}
+                  className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${
+                    videoEditMode
+                      ? 'border border-[#fd6159]/30'
+                      : 'bg-white/5 border border-white/10 text-zinc-400 hover:text-white'
+                  }`}
+                  style={videoEditMode ? { backgroundColor: 'rgba(253, 97, 89, 0.2)', color: '#fd6159' } : {}}
+                >
+                  {videoEditMode ? 'Klaar' : 'Bewerken'}
+                </motion.button>
+              )}
+              <motion.button
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                onClick={() => navigate('/upload')}
+                className="w-8 h-8 rounded-full flex items-center justify-center shadow-lg"
+                style={{ backgroundColor: '#fd6159', boxShadow: '0 4px 14px rgba(253, 97, 89, 0.3)' }}
+              >
+                <Plus className="h-4 w-4 text-white" />
+              </motion.button>
+            </div>
+          </div>
+
+          {/* Delete action bar */}
+          <AnimatePresence>
+            {videoEditMode && selectedVideos.size > 0 && (
+              <motion.div
+                initial={{ height: 0, opacity: 0 }}
+                animate={{ height: 'auto', opacity: 1 }}
+                exit={{ height: 0, opacity: 0 }}
+                className="mb-4 p-3 rounded-xl bg-red-500/10 border border-red-500/20"
+              >
+                <div className="flex items-center justify-between">
+                  <span className="text-sm text-zinc-400">
+                    {selectedVideos.size} geselecteerd
+                  </span>
+                  <motion.button
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
+                    onClick={deleteSelectedVideos}
+                    className="px-4 py-2 rounded-xl bg-red-500 text-white text-sm font-medium flex items-center gap-2"
+                  >
+                    <Trash2 className="h-4 w-4" />
+                    Verwijderen
+                  </motion.button>
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
+
+          {loadingVideos ? (
+            <div className="flex justify-center py-6">
+              <Loader2 className="h-6 w-6 animate-spin" style={{ color: '#fd6159' }} />
+            </div>
+          ) : myVideos.length === 0 ? (
+            <div className="flex flex-col items-center py-6">
+              <div className="w-12 h-12 mb-3 rounded-xl bg-zinc-800/50 border border-white/5 flex items-center justify-center">
+                <Video className="h-6 w-6 text-zinc-600" />
+              </div>
+              <p className="text-sm text-zinc-500 text-center">
+                Je hebt nog geen video's geüpload
+              </p>
+              <button
+                onClick={() => navigate('/upload')}
+                className="mt-2 text-xs hover:opacity-80"
+                style={{ color: '#fd6159' }}
+              >
+                Upload je eerste video
+              </button>
+            </div>
+          ) : (
+            <div className="grid grid-cols-3 gap-2">
+              {myVideos.map((video, index) => (
+                <motion.div
+                  key={video.id}
+                  initial={{ opacity: 0, scale: 0.95 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  transition={{ delay: index * 0.05 }}
+                  whileTap={{ scale: 0.98 }}
+                  onClick={() => videoEditMode && toggleVideoSelection(video.id)}
+                  className={`relative aspect-[9/16] rounded-xl overflow-hidden cursor-pointer transition-all ${
+                    videoEditMode && selectedVideos.has(video.id)
+                      ? 'ring-2 ring-[#fd6159]'
+                      : 'hover:opacity-90'
+                  }`}
+                >
+                  {/* Thumbnail or video preview */}
+                  {video.image_url ? (
+                    <img
+                      src={video.image_url}
+                      alt={video.title}
+                      className="w-full h-full object-cover"
+                    />
+                  ) : (
+                    <video
+                      src={video.video_url}
+                      className="w-full h-full object-cover"
+                      muted
+                    />
+                  )}
+
+                  {/* Dark overlay */}
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
+
+                  {/* Play icon */}
+                  <div className="absolute inset-0 flex items-center justify-center">
+                    <div className="w-8 h-8 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center">
+                      <Play className="h-4 w-4 text-white ml-0.5" fill="white" />
+                    </div>
+                  </div>
+
+                  {/* Title */}
+                  <div className="absolute bottom-0 left-0 right-0 p-2">
+                    <p className="text-[10px] text-white font-medium line-clamp-2">
+                      {video.title}
+                    </p>
+                  </div>
+
+                  {/* Selection checkbox */}
+                  {videoEditMode && (
+                    <motion.div
+                      initial={{ scale: 0 }}
+                      animate={{ scale: 1 }}
+                      className={`absolute top-2 right-2 w-6 h-6 rounded-full border-2 flex items-center justify-center ${
+                        selectedVideos.has(video.id)
+                          ? ''
+                          : 'border-white/50 bg-black/30'
+                      }`}
+                      style={selectedVideos.has(video.id) ? { backgroundColor: '#fd6159', borderColor: '#fd6159' } : {}}
+                    >
+                      {selectedVideos.has(video.id) && (
+                        <Check className="h-4 w-4 text-white" />
+                      )}
+                    </motion.div>
+                  )}
+                </motion.div>
               ))}
             </div>
           )}
