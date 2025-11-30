@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState, FormEvent } from "react";
+import { useEffect, useMemo, useState, FormEvent, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   X,
@@ -54,6 +54,7 @@ export function MealDetailModal({
   const [chatMessages, setChatMessages] = useState<ChatMessage[]>([]);
   const [chatInput, setChatInput] = useState("");
   const [chatLoading, setChatLoading] = useState(false);
+  const chatContainerRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
     if (meal && isOpen) {
@@ -69,6 +70,13 @@ export function MealDetailModal({
       setIsChatOpen(false);
     }
   }, [meal, isOpen]);
+
+  useEffect(() => {
+    if (isChatOpen && chatContainerRef.current) {
+      const el = chatContainerRef.current;
+      el.scrollTo({ top: el.scrollHeight, behavior: "smooth" });
+    }
+  }, [chatMessages, isChatOpen]);
 
   const recipeContext = useMemo(
     () => ({
@@ -306,7 +314,10 @@ export function MealDetailModal({
 
                 {isChatOpen && (
                   <div className="space-y-3">
-                    <div className="bg-background/60 rounded-xl p-3 h-60 overflow-y-auto space-y-2">
+                    <div
+                      ref={chatContainerRef}
+                      className="bg-background/60 rounded-xl p-3 h-60 overflow-y-auto space-y-2"
+                    >
                       {chatMessages.map((message) => (
                         <div
                           key={message.id}
