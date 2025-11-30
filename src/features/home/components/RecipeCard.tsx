@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Heart, Bookmark, ChefHat, Share2, Clock, Users } from 'lucide-react';
+import { Heart, Bookmark, ChefHat, Share2, Clock, Users, Volume2, VolumeX } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Recipe } from '@/shared/types';
 import { cn } from '@/shared/utils';
@@ -24,6 +24,7 @@ export function RecipeCard({
 }: RecipeCardProps) {
   const videoRef = useRef<HTMLVideoElement>(null);
   const [showHeart, setShowHeart] = useState(false);
+  const [isMuted, setIsMuted] = useState(false);
 
   useEffect(() => {
     if (videoRef.current) {
@@ -34,6 +35,18 @@ export function RecipeCard({
       }
     }
   }, [isActive]);
+
+  // Set video to use device volume (volume = 1, not muted)
+  useEffect(() => {
+    if (videoRef.current) {
+      videoRef.current.volume = 1;
+      videoRef.current.muted = isMuted;
+    }
+  }, [isMuted]);
+
+  const toggleMute = () => {
+    setIsMuted(!isMuted);
+  };
 
   const handleDoubleTap = () => {
     if (!isLiked) {
@@ -119,6 +132,20 @@ export function RecipeCard({
           transition={{ delay: 0.2 }}
           className="space-y-3"
         >
+          {/* Mute/unmute button - above recipe title */}
+          {recipe.video_url && (
+            <div className="relative flex items-center gap-3 mb-2">
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={toggleMute}
+                className="h-10 w-10 rounded-full bg-neutral-800/80 hover:bg-neutral-700 text-white backdrop-blur-sm"
+              >
+                {isMuted ? <VolumeX className="h-5 w-5" /> : <Volume2 className="h-5 w-5" />}
+              </Button>
+            </div>
+          )}
+
           {/* Recipe title */}
           <div className="flex items-center gap-2 flex-wrap">
             <ChefHat className="h-6 w-6 text-primary" />
