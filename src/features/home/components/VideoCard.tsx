@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Heart, Bookmark, MapPin, Clock, ChevronRight, ShoppingBag, CalendarCheck, Share2, Volume2, VolumeX } from 'lucide-react';
+import { Heart, Bookmark, MapPin, Clock, ChevronRight, ShoppingBag, CalendarCheck, Share2, Volume2, VolumeX, Play } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { VideoWithRestaurant } from '@/shared/types';
 import { cn } from '@/shared/utils';
@@ -34,16 +34,28 @@ export function VideoCard({
   const navigate = useNavigate();
   const videoRef = useRef<HTMLVideoElement>(null);
   const [showHeart, setShowHeart] = useState(false);
+  const [isPaused, setIsPaused] = useState(false);
 
   useEffect(() => {
     if (videoRef.current) {
-      if (isActive) {
+      if (isActive && !isPaused) {
         videoRef.current.play().catch(() => {});
       } else {
         videoRef.current.pause();
       }
     }
+  }, [isActive, isPaused]);
+
+  // Reset pause state when scrolling to a new video
+  useEffect(() => {
+    if (isActive) {
+      setIsPaused(false);
+    }
   }, [isActive]);
+
+  const togglePause = () => {
+    setIsPaused(!isPaused);
+  };
 
   // Set video to use device volume (volume = 1, not muted)
   useEffect(() => {
@@ -81,6 +93,7 @@ export function VideoCard({
     <div
       className="relative h-[100dvh] w-full snap-start snap-always overflow-hidden bg-card"
       onDoubleClick={handleDoubleTap}
+      onClick={togglePause}
     >
       {/* Video/Thumbnail Background */}
       <div className="absolute inset-0">
@@ -106,6 +119,22 @@ export function VideoCard({
       {/* Gradient Overlay */}
       <div className="video-overlay absolute inset-0" />
 
+      {/* Pause indicator */}
+      <AnimatePresence>
+        {isPaused && (
+          <motion.div
+            initial={{ opacity: 0, scale: 0.8 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.8 }}
+            className="absolute inset-0 flex items-center justify-center z-20 pointer-events-none"
+          >
+            <div className="h-20 w-20 rounded-full bg-black/50 flex items-center justify-center backdrop-blur-sm">
+              <Play className="h-10 w-10 text-white ml-1" fill="white" />
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       {/* Heart animation on double tap */}
       <AnimatePresence>
         {showHeart && (
@@ -121,7 +150,7 @@ export function VideoCard({
       </AnimatePresence>
 
       {/* Right side action buttons */}
-      <div className="absolute right-3 bottom-32 flex flex-col items-center gap-4 z-10">
+      <div className="absolute right-3 bottom-32 flex flex-col items-center gap-4 z-10" onClick={(e) => e.stopPropagation()}>
         <div className="flex flex-col items-center gap-1">
           <Button
             variant="ghost"
@@ -154,7 +183,7 @@ export function VideoCard({
       </div>
 
       {/* Bottom info section */}
-      <div className="absolute bottom-16 left-0 right-20 px-4 pb-4 z-10">
+      <div className="absolute bottom-16 left-0 right-20 px-4 pb-4 z-10" onClick={(e) => e.stopPropagation()}>
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
