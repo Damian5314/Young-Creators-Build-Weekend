@@ -4,17 +4,36 @@ import { Meal, MealTag, mockMeals } from '@/lib/types';
 export function useMeals() {
   const [meals] = useState<Meal[]>(mockMeals);
   const [activeFilter, setActiveFilter] = useState<MealTag | 'all'>('all');
+  const [searchQuery, setSearchQuery] = useState('');
 
   const filteredMeals = useMemo(() => {
+    const query = searchQuery.trim().toLowerCase();
+
     if (activeFilter === 'all') {
-      return meals;
+      const baseMeals = meals;
+      if (!query) return baseMeals;
+      return baseMeals.filter(meal =>
+        meal.name.toLowerCase().includes(query) ||
+        meal.description?.toLowerCase().includes(query) ||
+        meal.ingredients.some(ing => ing.toLowerCase().includes(query))
+      );
     }
-    return meals.filter(meal => meal.tags.includes(activeFilter));
-  }, [meals, activeFilter]);
+
+    const taggedMeals = meals.filter(meal => meal.tags.includes(activeFilter));
+    if (!query) return taggedMeals;
+
+    return taggedMeals.filter(meal =>
+      meal.name.toLowerCase().includes(query) ||
+      meal.description?.toLowerCase().includes(query) ||
+      meal.ingredients.some(ing => ing.toLowerCase().includes(query))
+    );
+  }, [meals, activeFilter, searchQuery]);
 
   const setFilter = (filter: MealTag | 'all') => {
     setActiveFilter(filter);
   };
+
+  const clearSearch = () => setSearchQuery('');
 
   const availableFilters: (MealTag | 'all')[] = [
     'all',
@@ -35,6 +54,9 @@ export function useMeals() {
     filteredMeals,
     activeFilter,
     setFilter,
-    availableFilters
+    availableFilters,
+    searchQuery,
+    setSearchQuery,
+    clearSearch
   };
 }
