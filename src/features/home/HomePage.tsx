@@ -98,7 +98,7 @@ export default function HomePage() {
       .from('recipes')
       .select('*')
       .not('video_url', 'is', null)
-      .order('like_count', { ascending: false })
+      .order('created_at', { ascending: false })
       .limit(20);
 
     if (!error && data) {
